@@ -7464,8 +7464,125 @@ async function handleMigrationChoice(choice) {
 }
 
 // 13. HANDLE SIGNED-IN USER
+/* ═══════════════════════════════════════════════
+   LOGIN HISTORY — Device detection + insert
+   ═══════════════════════════════════════════════ */
+function detectDeviceInfo() {
+    const ua = navigator.userAgent;
+    let deviceType = "Desktop";
+    let browser = "Unknown";
+    let os = "Unknown";
+
+    // Device type
+    if (/Mobi|Android/i.test(ua) && !/Tablet|iPad/i.test(ua)) {
+        deviceType = "Mobile";
+    } else if (/Tablet|iPad/i.test(ua)) {
+        deviceType = "Tablet";
+    }
+
+    // Browser
+    if (/Edg\//i.test(ua)) browser = "Edge";
+    else if (/OPR|Opera/i.test(ua)) browser = "Opera";
+    else if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "Chrome";
+    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
+    else if (/Firefox/i.test(ua)) browser = "Firefox";
+
+    // OS
+    if (/Windows/i.test(ua)) os = "Windows";
+    else if (/Android/i.test(ua)) os = "Android";
+    else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+    else if (/Mac/i.test(ua)) os = "macOS";
+    else if (/Linux/i.test(ua)) os = "Linux";
+
+    return { deviceType, browser, os, userAgent: ua };
+}
+
+async function recordLoginHistory(user) {
+    if (!supabaseClient || !user) return;
+
+    try {
+        const info = detectDeviceInfo();
+        
+        const { error } = await supabaseClient
+            .from("login_history")
+            .insert({
+                user_id: user.id,
+                email: user.email,
+                user_agent: info.userAgent,
+                device_type: info.deviceType,
+                browser: info.browser,
+                os: info.os
+            });
+
+        if (error) throw error;
+        console.log("📝 Login history recorded:", info.deviceType, info.browser, info.os);
+        
+    } catch (err) {
+        console.warn("Login history record failed:", err.message);
+    }
+}
+/* ═══════════════════════════════════════════════
+   LOGIN HISTORY — Device detection + insert
+   ═══════════════════════════════════════════════ */
+function detectDeviceInfo() {
+    const ua = navigator.userAgent;
+    let deviceType = "Desktop";
+    let browser = "Unknown";
+    let os = "Unknown";
+
+    // Device type
+    if (/Mobi|Android/i.test(ua) && !/Tablet|iPad/i.test(ua)) {
+        deviceType = "Mobile";
+    } else if (/Tablet|iPad/i.test(ua)) {
+        deviceType = "Tablet";
+    }
+
+    // Browser
+    if (/Edg\//i.test(ua)) browser = "Edge";
+    else if (/OPR|Opera/i.test(ua)) browser = "Opera";
+    else if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "Chrome";
+    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
+    else if (/Firefox/i.test(ua)) browser = "Firefox";
+
+    // OS
+    if (/Windows/i.test(ua)) os = "Windows";
+    else if (/Android/i.test(ua)) os = "Android";
+    else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+    else if (/Mac/i.test(ua)) os = "macOS";
+    else if (/Linux/i.test(ua)) os = "Linux";
+
+    return { deviceType, browser, os, userAgent: ua };
+}
+
+async function recordLoginHistory(user) {
+    if (!supabaseClient || !user) return;
+
+    try {
+        const info = detectDeviceInfo();
+        
+        const { error } = await supabaseClient
+            .from("login_history")
+            .insert({
+                user_id: user.id,
+                email: user.email,
+                user_agent: info.userAgent,
+                device_type: info.deviceType,
+                browser: info.browser,
+                os: info.os
+            });
+
+        if (error) throw error;
+        console.log("📝 Login history recorded:", info.deviceType, info.browser, info.os);
+        
+    } catch (err) {
+        console.warn("Login history record failed:", err.message);
+    }
+}
+
 async function handleSignedIn(user) {
     currentUser = user;
+        // Record login history
+    recordLoginHistory(user);
     updateUserUI(user);
     hideAuthScreen();
     console.log("👤 Signed in:", user.email);
