@@ -3,1398 +3,2929 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — Money Tracker</title>
-
+<title>Money Tracker</title>
 <script>
     window.SUPABASE_URL = "https://efslvypklnvybfdpebhd.supabase.co";
     window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmc2x2eXBrbG52eWJmZHBlYmhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTM1NTgsImV4cCI6MjEwNjg4OTU1OH0.mbSeCQcmLLVo7awT9VIbyR8dh1__fxAv2d4fZoIQTM4";
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-:root{
-    --bg:#0f172a;
-    --card:#1e293b;
-    --text:#f1f5f9;
-    --muted:#94a3b8;
-    --border:#334155;
-    --primary:#3b82f6;
-    --primary-soft:#1e3a8a;
-    --green:#4ade80;
-    --green-soft:#123321;
-    --red:#f87171;
-    --red-soft:#3b1818;
-    --orange:#fb923c;
-    --orange-soft:#3a2415;
-    --purple:#a78bfa;
-    --radius:14px;
-    --shadow:0 8px 28px rgba(0,0,0,0.3);
-}
-
+:root{--bg:#f4f6f8;--card:#ffffff;--text:#18212f;--muted:#718096;--border:#e4e8ee;--primary:#2563eb;--primary-soft:#eaf1ff;--green:#16a34a;--green-soft:#eaf8ef;--red:#dc2626;--red-soft:#fff0f0;--orange:#ea580c;--orange-soft:#fff3e8;--purple:#7c3aed;--purple-soft:#f2ebff;--shadow:0 8px 28px rgba(15,23,42,.07);--radius:18px;}
 *{box-sizing:border-box;}
-
-body{
-    margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-}
-
-button, input, select, textarea{
-    font:inherit;
-    cursor:pointer;
-}
-
-/* ═══ LOGIN SCREEN ═══ */
-#loginScreen {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    padding: 20px;
-}
-#loginScreen.hidden { display: none; }
-
-.login-box {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 20px;
-    padding: 36px 32px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-}
-
-.login-box .logo {
-    width: 60px;
-    height: 60px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #3b82f6, #7c3aed);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    margin: 0 auto 20px;
-}
-
-.login-box h1 {
-    text-align: center;
-    margin: 0 0 8px;
-    font-size: 22px;
-    color: #f1f5f9;
-}
-
-.login-box p.subtitle {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 13px;
-    margin: 0 0 24px;
-}
-
-.login-box input {
-    width: 100%;
-    padding: 13px 14px;
-    border: 1.5px solid #334155;
-    border-radius: 11px;
-    font-size: 14px;
-    margin-bottom: 12px;
-    outline: none;
-    background: #0f172a;
-    color: #f1f5f9;
-}
-.login-box input:focus { border-color: #3b82f6; }
-
-.login-box button[type="submit"] {
-    width: 100%;
-    border: 0;
-    background: linear-gradient(135deg, #3b82f6, #7c3aed);
-    color: white;
-    padding: 14px;
-    border-radius: 11px;
-    font-weight: 700;
-    font-size: 15px;
-    margin-top: 8px;
-}
-
-.login-box button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.auth-message {
-    padding: 11px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    margin-bottom: 12px;
-    display: none;
-}
-.auth-message.error { background: #3b1818; color: #f87171; display: block; }
-.auth-message.success { background: #123321; color: #4ade80; display: block; }
-
-/* ═══ ADMIN PANEL ═══ */
-#adminPanel {
-    display: none;
-    padding: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-#adminPanel.visible { display: block; }
-
-.admin-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 22px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.admin-header .title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.admin-header .title h1 {
-    margin: 0;
-    font-size: 20px;
-}
-
-.admin-header .title small {
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.logout-btn {
-    border: 0;
-    background: var(--red-soft);
-    color: var(--red);
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 13px;
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 20px;
-}
-
-@media (max-width: 900px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 520px) {
-    .stats-grid { grid-template-columns: 1fr; }
-}
-
-.stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-}
-
-.stat-card .label {
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-}
-
-.stat-card .value {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text);
-}
-
-.stat-card.blue { border-left: 4px solid #3b82f6; }
-.stat-card.green { border-left: 4px solid #4ade80; }
-.stat-card.purple { border-left: 4px solid #a78bfa; }
-.stat-card.orange { border-left: 4px solid #fb923c; }
-
-/* Section Card */
-.section-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.section-card h2 {
-    margin: 0 0 16px;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-
-.section-card h2 .title-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.section-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.action-btn {
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.action-btn:hover {
-    background: var(--primary-soft);
-    color: #93c5fd;
-    border-color: var(--primary);
-}
-
-.action-btn.primary {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.action-btn.primary:hover {
-    background: #2563eb;
-}
-
-/* Filters */
-.filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
-    padding: 14px;
-    background: var(--bg);
-    border-radius: 10px;
-}
-
-.filters input,
-.filters select {
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--card);
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    width: 100%;
-}
-
-.filters input:focus,
-.filters select:focus {
-    border-color: var(--primary);
-}
-
-/* Tables */
-.table-wrap {
-    overflow-x: auto;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-th, td {
-    padding: 12px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-}
-
-th {
-    background: #0f172a;
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(59, 130, 246, 0.05); }
-
-.empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-style: italic;
-}
-
-.loading {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-}
-
-.badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 99px;
-    font-size: 11px;
-    font-weight: 700;
-    background: var(--primary-soft);
-    color: #93c5fd;
-}
-
-.badge.mobile { background: #3a2415; color: #fb923c; }
-.badge.desktop { background: #1e3a8a; color: #93c5fd; }
-.badge.tablet { background: #281b45; color: #a78bfa; }
-
-.badge.ADD { background: #123321; color: #4ade80; }
-.badge.SPEND { background: #3b1818; color: #f87171; }
-.badge.LEND { background: #281b45; color: #a78bfa; }
-.badge.REPAY { background: #3a2415; color: #fb923c; }
-.badge.REVERSAL { background: #334155; color: #94a3b8; }
-
-.view-btn {
-    border: 0;
-    background: var(--primary-soft);
-    color: #93c5fd;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.view-btn:hover {
-    background: var(--primary);
-    color: white;
-}
-
-/* Charts */
-.chart-container {
-    padding: 20px;
-    background: var(--bg);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-}
-
-.bar-chart {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    height: 200px;
-    padding: 10px 0;
-}
-
-.bar-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 6px;
-    height: 100%;
-}
-
-.bar-item .bar {
-    width: 100%;
-    max-width: 60px;
-    min-height: 2px;
-    background: linear-gradient(180deg, #3b82f6, #2563eb);
-    border-radius: 6px 6px 0 0;
-    transition: height 0.3s ease;
-}
-
-.bar-item .bar-label {
-    font-size: 10px;
-    color: var(--muted);
-}
-
-.bar-item .bar-value {
-    font-size: 10px;
-    color: var(--text);
-    font-weight: 700;
-}
-
-.pie-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 15px;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-}
-
-.legend-color {
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-}
-
-.legend-name {
-    flex: 1;
-    color: var(--text);
-}
-
-.legend-value {
-    color: var(--muted);
-    font-weight: 700;
-}
-
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 10000;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.modal.open { display: flex; }
-
-.modal-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    width: 100%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-    color: var(--text);
-}
-
-.close-btn {
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    font-size: 28px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 8px;
-}
-
-.close-btn:hover { color: var(--red); }
-
-.detail-section { margin-bottom: 24px; }
-
-.detail-section h4 {
-    margin: 0 0 12px;
-    font-size: 14px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-}
-
-.detail-item {
-    background: #0f172a;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-}
-
-.detail-item .label {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-    font-weight: 700;
-}
-
-.detail-item .value {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text);
-}
-
-.detail-item .value.green { color: var(--green); }
-.detail-item .value.red { color: var(--red); }
-.detail-item .value.purple { color: var(--purple); }
-.detail-item .value.orange { color: var(--orange); }
-
-.admin-footer {
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-    padding: 20px 0;
-}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);}
+body.dark{--bg:#0f172a;--card:#172033;--text:#f1f5f9;--muted:#94a3b8;--border:#293548;--primary:#60a5fa;--primary-soft:#172d50;--green:#4ade80;--green-soft:#123321;--red:#f87171;--red-soft:#3b1818;--orange:#fb923c;--orange-soft:#3a2415;--purple:#a78bfa;--purple-soft:#281b45;--shadow:0 8px 28px rgba(0,0,0,.22);}
+button,input,select,textarea{font:inherit;}
+button{cursor:pointer;}
+.app{min-height:100vh;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:var(--primary);color:white;font-weight:bold;font-size:20px;}
+.brand h1{margin:0;font-size:20px;}
+.brand small{color:var(--muted);}
+.top-actions{display:flex;gap:8px;}
+.icon-btn{width:40px;height:40px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:12px;}
+.layout{display:flex;min-height:calc(100vh - 71px);}
+.sidebar{width:235px;background:var(--card);border-right:1px solid var(--border);padding:18px 12px;flex-shrink:0;}
+.nav-btn{width:100%;border:0;background:transparent;color:var(--muted);padding:12px 14px;border-radius:12px;text-align:left;margin-bottom:5px;font-weight:600;}
+.nav-btn:hover,.nav-btn.active{background:var(--primary-soft);color:var(--primary);}
+.main{width:100%;max-width:1450px;margin:auto;padding:24px;}
+.page{display:none;}
+.page.active{display:block;}
+.page-title{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:22px;}
+.page-title h2{margin:0 0 5px;font-size:26px;}
+.page-title p{margin:0;color:var(--muted);}
+.balance-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:15px;margin-bottom:18px;}
+.balance-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
+.balance-card.main-balance{background:var(--primary);color:white;}
+.balance-label{color:var(--muted);font-size:13px;font-weight:bold;margin-bottom:9px;}
+.main-balance .balance-label{color:rgba(255,255,255,.78);}
+.balance-value{font-size:29px;font-weight:800;}
+.balance-sub{margin-top:7px;color:var(--muted);font-size:12px;}
+.main-balance .balance-sub{color:rgba(255,255,255,.78);}
+.action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.action-btn{border:0;padding:16px;border-radius:15px;color:white;font-weight:800;font-size:15px;}
+.action-add{background:#16a34a;}
+.action-spend{background:#dc2626;}
+.action-lend{background:#7c3aed;}
+.action-repay{background:#ea580c;}
+.action-btn:hover{filter:brightness(.95);}
+.form-panel{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;box-shadow:var(--shadow);}
+.form-panel.open{display:block;}
+.form-panel h3{margin-top:0;}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.form-group{margin-bottom:12px;}
+.form-group.full{grid-column:1/-1;}
+label{display:block;margin-bottom:6px;font-size:13px;font-weight:700;}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:11px;background:var(--card);color:var(--text);outline:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);}
+textarea{min-height:75px;resize:vertical;}
+.primary-btn,.secondary-btn,.danger-btn{border:0;padding:11px 16px;border-radius:11px;font-weight:700;}
+.primary-btn{background:var(--primary);color:white;}
+.secondary-btn{background:var(--primary-soft);color:var(--primary);}
+.danger-btn{background:var(--red-soft);color:var(--red);}
+.form-actions{display:flex;gap:9px;margin-top:10px;flex-wrap:wrap;}
+.section-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
+.card h3{margin:0 0 16px;}
+.category-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.category-card{border:1px solid var(--border);border-radius:14px;padding:15px;}
+.category-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.category-name{font-weight:800;}
+.category-amount{font-weight:800;}
+.progress{width:100%;height:7px;background:var(--border);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--primary);border-radius:99px;}
+.muted{color:var(--muted);}
+.people-list{display:flex;flex-direction:column;gap:9px;}
+.person-row{display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:12px;}
+.transaction-list{display:flex;flex-direction:column;gap:10px;}
+.transaction{border:1px solid var(--border);border-radius:14px;padding:15px;}
+.transaction-top{display:flex;justify-content:space-between;gap:10px;}
+.transaction-title{font-weight:800;}
+.transaction-amount{font-weight:800;}
+.amount-positive{color:var(--green);}
+.amount-negative{color:var(--red);}
+.amount-neutral{color:var(--purple);}
+.transaction-meta{color:var(--muted);font-size:12px;margin-top:5px;}
+.transaction-actions{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap;}
+.small-btn{border:1px solid var(--border);background:var(--card);color:var(--text);padding:7px 10px;border-radius:9px;font-size:12px;font-weight:700;}
+.small-btn.danger{color:var(--red);background:var(--red-soft);border-color:transparent;}
+.badge{display:inline-block;padding:4px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--primary-soft);color:var(--primary);}
+.badge.reversed{background:var(--orange-soft);color:var(--orange);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:17px;}
+.stat-card strong{display:block;font-size:22px;margin-top:5px;}
+.chart{width:100%;height:230px;display:flex;align-items:flex-end;gap:12px;padding:20px 10px 10px;border-bottom:1px solid var(--border);}
+.bar-wrap{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;}
+.bar{width:min(42px,80%);min-height:2px;background:var(--primary);border-radius:8px 8px 0 0;}
+.bar-label{font-size:10px;color:var(--muted);}
+.bar-value{font-size:10px;color:var(--muted);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:11px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;}
+th{color:var(--muted);}
+.settings-section{margin-bottom:20px;}
+.settings-row{display:grid;grid-template-columns:1.5fr .7fr .7fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.toggle{display:flex;align-items:center;gap:8px;}
+.toggle input{width:auto;}
+.total-percent{font-size:18px;font-weight:800;}
+.percent-good{color:var(--green);}
+.percent-bad{color:var(--red);}
+.filters{display:grid;grid-template-columns:1.5fr repeat(4,1fr);gap:10px;margin-bottom:15px;}
+.empty{text-align:center;padding:35px 15px;color:var(--muted);}
+.notice{padding:12px 14px;border-radius:12px;margin-bottom:12px;font-size:13px;}
+.notice.success{background:var(--green-soft);color:var(--green);}
+.notice.error{background:var(--red-soft);color:var(--red);}
+.notice.info{background:var(--primary-soft);color:var(--primary);}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal.open{display:flex;}
+.modal-box{width:min(520px,100%);max-height:90vh;overflow:auto;background:var(--card);border-radius:20px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.25);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.close-btn{border:0;background:transparent;color:var(--muted);font-size:25px;}
+.split-list{display:flex;flex-direction:column;gap:9px;margin-bottom:8px;}
+.split-row{display:grid;grid-template-columns:1fr 130px auto;gap:8px;align-items:center;}
+.split-row button{border:0;background:var(--red-soft);color:var(--red);width:38px;height:38px;border-radius:10px;}
+.total-line{display:flex;justify-content:space-between;padding:9px 0;font-weight:800;}
+.hidden{display:none !important;}
+@media(max-width:1000px){.balance-grid{grid-template-columns:repeat(2,1fr);}.balance-card.main-balance{grid-column:1/-1;}.action-grid{grid-template-columns:repeat(2,1fr);}.section-grid{grid-template-columns:1fr;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:750px){.sidebar{width:70px;padding:10px 7px;}.nav-btn{text-align:center;font-size:0;padding:13px 5px;}.nav-btn::first-letter{font-size:18px;}.main{padding:15px;}.form-grid{grid-template-columns:1fr;}.category-grid{grid-template-columns:1fr;}.filters{grid-template-columns:1fr 1fr;}.settings-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:520px){.topbar{padding:10px 12px;}.brand h1{font-size:16px;}.brand small{display:none;}.balance-grid{grid-template-columns:1fr;}.balance-card.main-balance{grid-column:auto;}.action-grid{grid-template-columns:1fr 1fr;}.stats-grid{grid-template-columns:1fr 1fr;}.filters{grid-template-columns:1fr;}.split-row{grid-template-columns:1fr 100px auto;}.page-title{flex-direction:column;}}
+.app-notification{position:fixed;top:20px;left:50%;transform:translate(-50%,-120px);background:#222;color:white;padding:14px 18px;border-radius:10px;box-shadow:0 8px 25px rgba(0,0,0,0.2);z-index:9999;display:flex;align-items:center;gap:15px;max-width:90%;transition:transform 0.3s ease;}
+.app-notification.show{transform:translate(-50%,0);}
+.app-notification button{border:none;background:transparent;color:white;font-size:20px;cursor:pointer;}
+#authScreen{position:fixed;inset:0;background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
+#authScreen.hidden{display:none;}
+.auth-box{background:white;border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 25px 80px rgba(0,0,0,0.3);}
+.auth-box .brand{justify-content:center;margin-bottom:24px;}
+.auth-box .brand-icon{background:linear-gradient(135deg,#2563eb,#7c3aed);}
+.auth-box h2{text-align:center;margin:0 0 8px;font-size:22px;color:#18212f;}
+.auth-box p.subtitle{text-align:center;color:#718096;font-size:13px;margin:0 0 24px;}
+.auth-tabs{display:flex;gap:4px;background:#f4f6f8;border-radius:12px;padding:4px;margin-bottom:20px;}
+.auth-tab{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font-weight:700;font-size:14px;color:#718096;cursor:pointer;}
+.auth-tab.active{background:white;color:#2563eb;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.auth-form input{width:100%;padding:13px 14px;border:1.5px solid #e4e8ee;border-radius:11px;font-size:14px;margin-bottom:12px;outline:none;}
+.auth-form input:focus{border-color:#2563eb;}
+.auth-form button[type="submit"]{width:100%;border:0;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;padding:14px;border-radius:11px;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px;}
+.auth-form button[type="submit"]:disabled{opacity:0.6;cursor:not-allowed;}
+.auth-message{padding:11px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
+.auth-message.error{background:#fff0f0;color:#dc2626;display:block;}
+.auth-message.success{background:#eaf8ef;color:#16a34a;display:block;}
+.sync-indicator{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid #e4e8ee;background:white;color:#718096;}
+.sync-indicator .dot{width:8px;height:8px;border-radius:50%;background:#718096;}
+.sync-indicator.synced{color:#16a34a;background:#eaf8ef;border-color:#eaf8ef;}
+.sync-indicator.synced .dot{background:#16a34a;}
+.sync-indicator.saving{color:#ea580c;background:#fff3e8;border-color:#fff3e8;}
+.sync-indicator.saving .dot{background:#ea580c;}
+.sync-indicator.offline{color:#dc2626;background:#fff0f0;border-color:#fff0f0;}
+.sync-indicator.offline .dot{background:#dc2626;}
+.user-btn{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid #e4e8ee;background:white;color:#18212f;cursor:pointer;max-width:180px;}
+.user-btn:hover{background:#eaf1ff;color:#2563eb;}
+.user-btn .avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;}
+.user-btn .email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;}
+#migrationModal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:10001;padding:20px;}
+#migrationModal.show{display:flex;}
+.migration-box{background:white;border-radius:18px;padding:28px;max-width:460px;width:100%;}
+.migration-box h3{margin:0 0 12px;font-size:20px;}
+.migration-box p{color:#4a5568;font-size:14px;margin-bottom:20px;}
+.migration-actions{display:flex;gap:10px;}
+.migration-actions button{flex:1;border:0;padding:12px 16px;border-radius:11px;font-weight:700;cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;}
+.btn-secondary{background:#f4f6f8;color:#18212f;}
 </style>
 </head>
-<body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
-    <div class="login-box">
-        <div class="logo">🔧</div>
-        <h1>Admin Panel</h1>
-        <p class="subtitle">Money Tracker — Admin Access</p>
+<body>
+        <!-- LOGIN SCREEN -->
+<div id="authScreen">
+    <div class="auth-box">
+        <div class="brand">
+            <div class="brand-icon">₹</div>
+            <div>
+                <h1 style="margin:0;font-size:20px;">Money Tracker</h1>
+                <small style="color:#718096;">Personal Finance Dashboard</small>
+            </div>
+        </div>
+
+        <h2 id="authTitle">Welcome Back</h2>
+        <p class="subtitle" id="authSubtitle">Sign in to sync your data</p>
+
+        <div class="auth-tabs">
+            <button type="button" class="auth-tab active" id="loginTabBtn" onclick="switchAuthTab('login')">Log In</button>
+            <button type="button" class="auth-tab" id="signupTabBtn" onclick="switchAuthTab('signup')">Sign Up</button>
+        </div>
 
         <div id="authMessage" class="auth-message"></div>
 
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            <input type="email" id="loginEmail" placeholder="Admin email" required>
+        <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+            <input type="email" id="loginEmail" placeholder="Email address" required>
             <input type="password" id="loginPassword" placeholder="Password" required>
-            <button type="submit" id="loginBtn">Log In</button>
+            <button type="submit" id="loginSubmitBtn">Log In</button>
+        </form>
+
+        <form id="signupForm" class="auth-form" onsubmit="handleSignup(event)">
+            <input type="email" id="signupEmail" placeholder="Email address" required>
+            <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required minlength="6">
+            <input type="password" id="signupPassword2" placeholder="Confirm password" required minlength="6">
+            <button type="submit" id="signupSubmitBtn">Create Account</button>
         </form>
     </div>
 </div>
 
-<!-- ADMIN PANEL -->
-<div id="adminPanel">
-    <div class="admin-header">
-        <div class="title">
-            <div style="font-size:24px;">🔧</div>
-            <div>
-                <h1>Admin Dashboard</h1>
-                <small id="adminEmail">Loading…</small>
-            </div>
+<!-- MIGRATION MODAL -->
+<div id="migrationModal">
+    <div class="migration-box">
+        <h3>📦 Local Data Found</h3>
+        <p>We found existing Money Tracker data on this device. Upload it to your cloud account?</p>
+        <div class="migration-actions">
+            <button type="button" class="btn-primary" onclick="handleMigrationChoice('upload')">Upload Local Data</button>
+            <button type="button" class="btn-secondary" onclick="handleMigrationChoice('skip')">Skip</button>
         </div>
-        <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats-grid">
-        <div class="stat-card blue">
-            <div class="label">Total Users</div>
-            <div class="value" id="statUsers">—</div>
-        </div>
-        <div class="stat-card green">
-            <div class="label">Total Transactions</div>
-            <div class="value" id="statTransactions">—</div>
-        </div>
-        <div class="stat-card purple">
-            <div class="label">Total Volume</div>
-            <div class="value" id="statVolume">—</div>
-        </div>
-        <div class="stat-card orange">
-            <div class="label">Logins Today</div>
-            <div class="value" id="statToday">—</div>
-        </div>
-    </div>
-
-    <!-- ANALYTICS -->
-    <div class="section-card">
-        <h2><span class="title-text">📈 Analytics</span></h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="analyticsGrid">
-            <div class="chart-container">
-                <div style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:700;">Last 7 Days — Transactions</div>
-                <div class="bar-chart" id="weekChart">
-                    <div class="loading">Loading…</div>
-                </div>
-            </div>
-            <div class="chart-container">
-                <div style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:700;">Category Breakdown (All Users)</div>
-                <div id="categoryChart">
-                    <div class="loading">Loading…</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOGIN HISTORY -->
-    <div class="section-card">
-        <h2>
-            <span class="title-text">📝 Login History</span>
-            <div class="section-actions">
-                <button class="action-btn" onclick="exportLoginCSV()">📥 Export CSV</button>
-            </div>
-        </h2>
-        <div class="filters">
-            <input type="date" id="filterDateFrom" placeholder="From date" onchange="applyLoginFilters()">
-            <input type="date" id="filterDateTo" placeholder="To date" onchange="applyLoginFilters()">
-            <select id="filterDevice" onchange="applyLoginFilters()">
-                <option value="">All Devices</option>
-                <option value="Desktop">Desktop</option>
-                <option value="Mobile">Mobile</option>
-                <option value="Tablet">Tablet</option>
-            </select>
-            <select id="filterEmail" onchange="applyLoginFilters()">
-                <option value="">All Emails</option>
-            </select>
-            <button class="action-btn" onclick="clearLoginFilters()">Clear Filters</button>
-        </div>
-        <div id="loginHistoryContainer">
-            <div class="loading">Loading login history…</div>
-        </div>
-    </div>
-
-    <!-- USERS SUMMARY -->
-    <div class="section-card">
-        <h2>
-            <span class="title-text">👥 Users Summary</span>
-            <div class="section-actions">
-                <button class="action-btn" onclick="exportUsersJSON()">📥 Export JSON</button>
-            </div>
-        </h2>
-        <div id="usersSummaryContainer">
-            <div class="loading">Loading users…</div>
-        </div>
-    </div>
-
-    <div class="admin-footer">
-        Money Tracker Admin Panel • Only accessible to admin email
     </div>
 </div>
 
-<!-- USER DETAIL MODAL -->
-<div id="userDetailModal" class="modal">
+<div id="appNotification" class="app-notification">
+    <span id="appNotificationMessage"></span>
+    <button onclick="hideNotification()">×</button>
+</div>
+
+<div class="app">
+
+<header class="topbar">
+    <div class="brand">
+        <div class="brand-icon">₹</div>
+        <div>
+            <h1>Money Tracker</h1>
+            <small>Personal Finance Dashboard</small>
+        </div>
+    </div>
+
+    <div class="top-actions">
+        <div id="syncIndicator" class="sync-indicator synced" title="Cloud sync status">
+            <span class="dot"></span>
+            <span id="syncText">Synced</span>
+        </div>
+        <button type="button" class="user-btn" id="userBtn" onclick="handleLogout()" title="Log out">
+            <span class="avatar" id="userAvatar">?</span>
+            <span class="email" id="userEmail">Loading…</span>
+        </button>
+        <button class="icon-btn" onclick="toggleDarkMode()" title="Dark Mode">◐</button>
+    </div>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+    <button class="nav-btn active" onclick="showPage('dashboard',this)">🏠 Dashboard</button>
+    <button class="nav-btn" onclick="showPage('transactions',this)">📋 Transactions</button>
+    <button class="nav-btn" onclick="showPage('reports',this)">📊 Reports</button>
+    <button class="nav-btn" onclick="showPage('lending',this)">🤝 Lending</button>
+    <button class="nav-btn" onclick="showPage('manage',this)">⚙️ Manage</button>
+    <button class="nav-btn" onclick="showPage('backup',this)">💾 Backup</button>
+</aside>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+
+<section id="page-dashboard" class="page active">
+
+    <div class="page-title">
+        <div>
+            <h2>Dashboard</h2>
+            <p>Your current money overview.</p>
+        </div>
+    </div>
+
+    <div class="balance-grid">
+        <div class="balance-card main-balance">
+            <div class="balance-label">TOTAL BALANCE</div>
+            <div class="balance-value" id="totalBalance">₹0</div>
+            <div class="balance-sub">Cash + Online</div>
+        </div>
+        <div class="balance-card">
+            <div class="balance-label">CASH</div>
+            <div class="balance-value" id="cashBalance">₹0</div>
+        </div>
+        <div class="balance-card">
+            <div class="balance-label">ONLINE</div>
+            <div class="balance-value" id="onlineBalance">₹0</div>
+        </div>
+        <div class="balance-card">
+            <div class="balance-label">TOTAL LENT</div>
+            <div class="balance-value" id="lentBalance">₹0</div>
+        </div>
+    </div>
+
+    <div class="action-grid">
+        <button class="action-btn action-add" onclick="togglePanel('addMoneyPanel')">+ Add Money</button>
+        <button class="action-btn action-spend" onclick="togglePanel('spendMoneyPanel')">− Spend Money</button>
+        <button class="action-btn action-lend" onclick="togglePanel('lendMoneyPanel')">🤝 Lend Money</button>
+        <button class="action-btn action-repay" onclick="togglePanel('repayMoneyPanel')">↩ Repayment</button>
+    </div>
+
+    <!-- ADD MONEY -->
+    <div id="addMoneyPanel" class="form-panel">
+        <h3>Add Money</h3>
+        <div id="addMoneyMessage"></div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Total Amount</label>
+                <input id="addAmount" type="number" min="0" step="0.01" placeholder="Enter amount" oninput="updateAddPaymentTotal()">
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input id="addDate" type="date">
+            </div>
+            <div class="form-group full">
+                <label>Distribution</label>
+                <select id="addDistributionMode" onchange="updateAddDistributionMode()">
+                    <option value="auto">Auto Allocate</option>
+                    <option value="specific">Specific Category</option>
+                </select>
+            </div>
+            <div id="addSpecificCategoryBox" class="form-group full" style="display:none;">
+                <label>Category</label>
+                <select id="addSpecificCategory"></select>
+            </div>
+            <div class="form-group full">
+                <label>Payment Source</label>
+                <select id="addPaymentMode" onchange="updateAddPaymentMode()">
+                    <option value="cash">Cash</option>
+                    <option value="online">Online</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+            <div id="addSplitPayment" class="form-group full" style="display:none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cash Amount</label>
+                        <input id="addCash" type="number" min="0" step="0.01" value="0" oninput="updateAddPaymentTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Online Amount</label>
+                        <input id="addOnline" type="number" min="0" step="0.01" value="0" oninput="updateAddPaymentTotal()">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group full">
+                <label>Note</label>
+                <textarea id="addNote" placeholder="Optional note"></textarea>
+            </div>
+        </div>
+        <div class="total-line">
+            <span>Payment Total</span>
+            <span id="addPaymentTotal">₹0</span>
+        </div>
+        <div class="form-actions">
+            <button class="primary-btn" onclick="addMoney()">Add Money</button>
+            <button class="secondary-btn" onclick="togglePanel('addMoneyPanel')">Close</button>
+        </div>
+    </div>
+
+    <!-- SPEND MONEY -->
+    <div id="spendMoneyPanel" class="form-panel">
+        <h3>Spend Money</h3>
+        <div id="spendMoneyMessage"></div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Total Spending</label>
+                <input id="spendAmount" type="number" min="0" step="0.01" oninput="updateSpendTotals()" placeholder="Enter amount">
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input id="spendDate" type="date">
+            </div>
+            <div class="form-group full">
+                <label>Payment Source</label>
+                <select id="spendPaymentMode" onchange="updateSpendPaymentMode()">
+                    <option value="cash">Cash</option>
+                    <option value="online">Online</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+            <div id="spendSplitPayment" class="form-group full" style="display:none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cash Amount</label>
+                        <input id="spendCash" type="number" min="0" step="0.01" value="0" oninput="updateSpendTotals()">
+                    </div>
+                    <div class="form-group">
+                        <label>Online Amount</label>
+                        <input id="spendOnline" type="number" min="0" step="0.01" value="0" oninput="updateSpendTotals()">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group full">
+                <label>Categories</label>
+                <div id="spendCategoryRows" class="split-list"></div>
+                <button class="secondary-btn" onclick="addSpendCategoryRow()">+ Add Category</button>
+            </div>
+            <div class="form-group full">
+                <label>Note</label>
+                <textarea id="spendNote" placeholder="Optional note"></textarea>
+            </div>
+        </div>
+        <div class="total-line">
+            <span>Payment Total</span>
+            <span id="spendPaymentTotal">₹0</span>
+        </div>
+        <div class="total-line">
+            <span>Category Total</span>
+            <span id="spendCategoryTotal">₹0</span>
+        </div>
+        <div class="form-actions">
+            <button class="primary-btn" onclick="spendMoney()">Record Spending</button>
+            <button class="secondary-btn" onclick="togglePanel('spendMoneyPanel')">Close</button>
+        </div>
+    </div>
+
+    <!-- LEND MONEY -->
+    <div id="lendMoneyPanel" class="form-panel">
+        <h3>Lend Money</h3>
+        <div id="lendMoneyMessage"></div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Person</label>
+                <input id="lendPerson" type="text" placeholder="Person name">
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input id="lendAmount" type="number" min="0" step="0.01" oninput="updateLendPaymentTotal()">
+            </div>
+            <div class="form-group full">
+                <label>Payment Source</label>
+                <select id="lendPaymentMode" onchange="updateLendPaymentMode()">
+                    <option value="cash">Cash</option>
+                    <option value="online">Online</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+            <div id="lendSplitPayment" class="form-group full" style="display:none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cash Amount</label>
+                        <input id="lendCash" type="number" min="0" step="0.01" value="0" oninput="updateLendPaymentTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Online Amount</label>
+                        <input id="lendOnline" type="number" min="0" step="0.01" value="0" oninput="updateLendPaymentTotal()">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="lendCategory"></select>
+            </div>
+            <div class="form-group full">
+                <label>Note</label>
+                <textarea id="lendNote" placeholder="Optional note"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="primary-btn" onclick="lendMoney()">Lend Money</button>
+            <button class="secondary-btn" onclick="togglePanel('lendMoneyPanel')">Close</button>
+        </div>
+    </div>
+
+    <!-- REPAYMENT -->
+    <div id="repayMoneyPanel" class="form-panel">
+        <h3>Record Repayment</h3>
+        <div id="repayMessage"></div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Person</label>
+                <select id="repayPerson" onchange="updateRepayCategorySelect(this.value)"></select>
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input id="repayAmount" type="number" min="0" step="0.01" oninput="updateRepayPaymentTotal()">
+            </div>
+            <div class="form-group full">
+                <label>Payment Source</label>
+                <select id="repayPaymentMode" onchange="updateRepayPaymentMode()">
+                    <option value="cash">Cash</option>
+                    <option value="online">Online</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+            <div id="repaySplitPayment" class="form-group full" style="display:none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cash Amount</label>
+                        <input id="repayCash" type="number" min="0" step="0.01" value="0" oninput="updateRepayPaymentTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Online Amount</label>
+                        <input id="repayOnline" type="number" min="0" step="0.01" value="0" oninput="updateRepayPaymentTotal()">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="repayCategory"></select>
+            </div>
+            <div class="form-group full">
+                <label>Note</label>
+                <textarea id="repayNote" placeholder="Optional note"></textarea>
+            </div>
+        </div>
+        <div class="total-line">
+            <span>Payment Total</span>
+            <span id="repayPaymentTotal">₹0</span>
+        </div>
+        <div class="form-actions">
+            <button class="primary-btn" onclick="repayMoney()">Record Repayment</button>
+            <button class="secondary-btn" onclick="togglePanel('repayMoneyPanel')">Close</button>
+        </div>
+    </div>
+
+    <div class="section-grid">
+        <div class="card">
+            <h3>Category Balances</h3>
+            <div id="categoryGrid" class="category-grid"></div>
+        </div>
+        <div class="card">
+            <h3>People Who Owe You</h3>
+            <div id="peopleList" class="people-list"></div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+        <div class="page-title" style="margin-bottom:12px;">
+            <div>
+                <h3 style="margin:0;">Recent Transactions</h3>
+                <p>Latest activity</p>
+            </div>
+            <button class="secondary-btn" onclick="showPageById('transactions')">View All</button>
+        </div>
+        <div id="recentTransactions" class="transaction-list"></div>
+    </div>
+
+</section>
+
+<!-- TRANSACTIONS -->
+
+<section id="page-transactions" class="page">
+    <div class="page-title">
+        <div>
+            <h2>Transactions</h2>
+            <p>Search, filter and manage your transaction history.</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="filters">
+            <input id="searchTransactions" placeholder="Search..." oninput="renderHistory()">
+            <select id="filterType" onchange="renderHistory()">
+                <option value="">All Types</option>
+                <option value="ADD">Add Money</option>
+                <option value="SPEND">Spending</option>
+                <option value="LEND">Lending</option>
+                <option value="REPAY">Repayment</option>
+                <option value="REVERSAL">Reversal</option>
+                <option value="TRANSFER">Transfer</option>
+            </select>
+            <select id="filterCategory" onchange="renderHistory()">
+                <option value="">All Categories</option>
+            </select>
+            <select id="filterLocation" onchange="renderHistory()">
+                <option value="">Cash + Online</option>
+                <option value="cash">Cash</option>
+                <option value="online">Online</option>
+            </select>
+            <input id="filterDate" type="date" onchange="renderHistory()">
+        </div>
+        <div id="history" class="transaction-list"></div>
+    </div>
+</section>
+
+<!-- REPORTS -->
+
+<section id="page-reports" class="page">
+    <div class="page-title">
+        <div>
+            <h2>Reports</h2>
+            <p>Understand where your money is going.</p>
+        </div>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="muted">Money Added</span>
+            <strong id="reportAdded">₹0</strong>
+        </div>
+        <div class="stat-card">
+            <span class="muted">Money Spent</span>
+            <strong id="reportSpent">₹0</strong>
+        </div>
+        <div class="stat-card">
+            <span class="muted">Money Lent</span>
+            <strong id="reportLent">₹0</strong>
+        </div>
+        <div class="stat-card">
+            <span class="muted">Repayments</span>
+            <strong id="reportRepay">₹0</strong>
+        </div>
+    </div>
+    <div class="section-grid">
+        <div class="card">
+            <h3>Last 7 Days — Money Added</h3>
+            <div id="weeklyChart" class="chart"></div>
+        </div>
+        <div class="card">
+            <h3>Last 7 Days — Spending</h3>
+            <div id="weeklySpendChart" class="chart"></div>
+        </div>
+    </div>
+    <br>
+    <div class="section-grid">
+        <div class="card">
+            <h3>Category Summary</h3>
+            <div id="categoryReport"></div>
+        </div>
+        <div class="card">
+            <h3>Cash vs Online</h3>
+            <div id="locationReport"></div>
+        </div>
+    </div>
+</section>
+
+<!-- LENDING -->
+
+<section id="page-lending" class="page">
+    <div class="page-title">
+        <div>
+            <h2>Lending</h2>
+            <p>Track money you've lent and repayments.</p>
+        </div>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="muted">Total Lent Outstanding</span>
+            <strong id="lendingTotal">₹0</strong>
+        </div>
+        <div class="stat-card">
+            <span class="muted">People</span>
+            <strong id="lendingPeopleCount">0</strong>
+        </div>
+    </div>
+    <div class="card">
+        <h3>Outstanding Balances</h3>
+        <div id="lendingTable"></div>
+    </div>
+</section>
+
+<!-- MANAGE -->
+
+<section id="page-manage" class="page">
+    <div class="page-title">
+        <div>
+            <h2>Manage</h2>
+            <p>Customize categories, allocations and starting balances.</p>
+        </div>
+    </div>
+    <div id="manageMessage"></div>
+    <div class="card settings-section">
+        <h3>Categories & Allocation</h3>
+        <p class="muted">Allocation applies to future Add Money transactions. Old transactions remain unchanged.</p>
+        <div id="categorySettings"></div>
+        <br>
+        <div class="total-line">
+            <span>Total Allocation</span>
+            <span id="allocationTotal" class="total-percent">0%</span>
+        </div>
+        <div class="form-actions">
+            <button class="primary-btn" onclick="saveCategorySettings()">Save Category Settings</button>
+            <button class="secondary-btn" onclick="addCategoryRow()">+ Add Category</button>
+        </div>
+    </div>
+    <div class="card settings-section">
+        <h3>Starting Balances</h3>
+        <p class="muted">Starting balances are useful when you first begin using the tracker.</p>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Starting Cash</label>
+                <input id="startingCash" type="number" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Starting Online</label>
+                <input id="startingOnline" type="number" min="0" step="0.01">
+            </div>
+        </div>
+        <button class="primary-btn" onclick="saveStartingBalances()">Save Starting Balances</button>
+    </div>
+    <div class="card">
+        <h3>Appearance</h3>
+        <button class="secondary-btn" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
+</section>
+
+<!-- BACKUP -->
+
+<section id="page-backup" class="page">
+    <div class="page-title">
+        <div>
+            <h2>Backup & Data</h2>
+            <p>Protect and manage your Money Tracker data.</p>
+        </div>
+    </div>
+    <div class="section-grid">
+        <div class="card">
+            <h3>Backup</h3>
+            <p class="muted">Export all your tracker data as a JSON backup.</p>
+            <div class="form-actions">
+                <button class="primary-btn" onclick="exportJSON()">Export JSON</button>
+                <button class="secondary-btn" onclick="exportCSV()">Export CSV</button>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Restore</h3>
+            <p class="muted">Import a previously exported JSON backup.</p>
+            <input id="importFile" type="file" accept=".json">
+            <br><br>
+            <button class="primary-btn" onclick="importJSON()">Import Backup</button>
+        </div>
+    </div>
+    <br>
+    <div class="card">
+        <h3>Data Integrity</h3>
+        <p class="muted">Check whether the stored transaction data is internally consistent.</p>
+        <button class="secondary-btn" onclick="runIntegrityCheck()">Run Integrity Check</button>
+        <div id="integrityResult" style="margin-top:15px;"></div>
+    </div>
+    <br>
+    <div class="card">
+        <h3>Start Fresh</h3>
+        <p class="muted">Permanently clears transactions, balances and test data from this browser.</p>
+        <button class="danger-btn" onclick="openResetModal()">Reset All Data</button>
+    </div>
+</section>
+
+</main>
+</div>
+</div>
+
+<!-- TRANSFER MODAL -->
+<div id="transferModal" class="modal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 id="userDetailTitle">User Details</h3>
-            <button class="close-btn" onclick="closeUserDetailModal()">×</button>
+            <h3>Transfer Category Balance</h3>
+            <button class="close-btn" onclick="closeModal('transferModal')">×</button>
         </div>
-        <div id="userDetailContent">
-            <div class="loading">Loading…</div>
+        <div style="margin-bottom:16px;">
+            <div class="total-line">
+                <span>From:</span>
+                <strong id="transferFromCategory">—</strong>
+            </div>
+            <div class="total-line">
+                <span>Available Balance:</span>
+                <strong id="transferFromBalance">₹0</strong>
+            </div>
+        </div>
+        <div class="form-group full">
+            <label>To Category</label>
+            <select id="transferToCategory"></select>
+        </div>
+        <div class="form-group full">
+            <label>Amount to Transfer</label>
+            <input id="transferAmount" type="number" min="0.01" step="0.01" placeholder="Enter amount">
+        </div>
+        <div class="notice info">
+            Money moves from one category to another. Cash/Online balances remain unchanged.
+        </div>
+        <div class="form-actions">
+            <button class="primary-btn" onclick="confirmTransfer()">Transfer</button>
+            <button class="secondary-btn" onclick="closeModal('transferModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- TRANSACTION DETAIL MODAL -->
+<div id="transactionModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Transaction Details</h3>
+            <button class="close-btn" onclick="closeModal('transactionModal')">×</button>
+        </div>
+        <div id="transactionDetails"></div>
+    </div>
+</div>
+
+<!-- REVERSAL MODAL -->
+<div id="reverseModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Reverse Transaction?</h3>
+            <button class="close-btn" onclick="closeModal('reverseModal')">×</button>
+        </div>
+        <div id="reverseDetails"></div>
+        <div class="notice info">
+            This will create a new reversal transaction. The original transaction will remain in history.
+        </div>
+        <div class="form-actions">
+            <button class="danger-btn" onclick="confirmReverse()">Reverse Transaction</button>
+            <button class="secondary-btn" onclick="closeModal('reverseModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- RESET MODAL -->
+<div id="resetModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Start Fresh?</h3>
+            <button class="close-btn" onclick="closeModal('resetModal')">×</button>
+        </div>
+        <div class="notice error">
+            This will permanently remove all transactions and current balances from this browser.
+        </div>
+        <p>
+            Categories and their settings will remain, but all money data will be cleared.
+        </p>
+        <div class="form-actions">
+            <button class="danger-btn" onclick="resetAllData()">Yes, Start Fresh</button>
+            <button class="secondary-btn" onclick="closeModal('resetModal')">Cancel</button>
         </div>
     </div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   ADMIN PANEL — SUPABASE + LOGIC
-   ═══════════════════════════════════════════════ */
+/* =========================================================
+   MONEY TRACKER — MASTER VERSION (FINAL — WITH TRANSFER)
+   ========================================================= */
 
+const STORAGE_KEY = "moneyTrackerMasterData_v1";
 const ADMIN_EMAIL = "2shaikhfarid211336@gmail.com";
 
-let supabaseClient = null;
-let currentUser = null;
-let allLogins = [];
-let allTrackers = [];
+const defaultCategories = [
+    {id:"gym", name:"Gym Fund", percentage:30, active:true},
+    {id:"daily", name:"Daily Use", percentage:10, active:true},
+    {id:"emergency", name:"Emergency Savings", percentage:20, active:true},
+    {id:"mobile", name:"Future Mobile", percentage:20, active:true},
+    {id:"laptop", name:"Future Laptop", percentage:20, active:true}
+];
 
-// Initialize Supabase
+let data = loadData();
+let pendingReverseId = null;
+let spendLocationRows = [];
+let spendCategoryRows = [];
+let _transferFromId = null;
+
+/* ---------------------------
+   DATA MODEL
+---------------------------- */
+
+function createDefaultData(){
+    return {
+        version:1,
+        settings:{
+            categories:JSON.parse(JSON.stringify(defaultCategories)),
+            startingBalances:{cash:0,online:0},
+            darkMode:false
+        },
+        transactions:[]
+    };
+}
+
+/* ---------------------------
+   LOAD / SAVE
+---------------------------- */
+
+function loadData(){
+    try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return createDefaultData();
+        const parsed = JSON.parse(raw);
+        if(!parsed.settings) parsed.settings = createDefaultData().settings;
+        if(!parsed.settings.categories) parsed.settings.categories = JSON.parse(JSON.stringify(defaultCategories));
+        if(!parsed.settings.startingBalances) parsed.settings.startingBalances = {cash:0,online:0};
+        if(!Array.isArray(parsed.transactions)) parsed.transactions = [];
+        migrateTransactions(parsed.transactions);
+        return parsed;
+    }catch(error){
+        try{localStorage.setItem(STORAGE_KEY + "_corrupt_backup", localStorage.getItem(STORAGE_KEY) || "");}catch(e){}
+        console.error(error);
+        return createDefaultData();
+    }
+}
+
+function saveData(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if(typeof window.__cloudSaveHook === "function"){
+        try{window.__cloudSaveHook();}catch(e){console.warn("Cloud save hook failed:", e);}
+    }
+}
+
+/* ---------------------------
+   MIGRATION
+---------------------------- */
+
+function migrateTransactions(transactions){
+    transactions.forEach(t => {
+        if(!t.id) t.id = createId();
+        if(!t.timestamp){
+            if(t.date){
+                const parsedDate = new Date(t.date + (t.time ? "T" + t.time : "T00:00:00"));
+                t.timestamp = Number.isNaN(parsedDate.getTime()) ? Date.now() : parsedDate.getTime();
+            } else {
+                t.timestamp = Date.now();
+            }
+        }
+        if(!t.date){ t.date = localDateString(new Date(t.timestamp)); }
+        if(!t.time){
+            const d = new Date(t.timestamp);
+            t.time = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+        }
+        if(!t.categoryLegs){
+            t.categoryLegs = {};
+            if(t.type === "ADD" || !t.type){
+                const amount = Number(t.amount || 0);
+                defaultCategories.forEach(c => { t.categoryLegs[c.id] = amount * Number(c.percentage || 0) / 100; });
+            }
+        }
+        if(!t.locationLegs){
+            const amount = Number(t.amount || 0);
+            if(t.type === "SPEND" || t.type === "LEND") t.locationLegs = {cash:-amount, online:0};
+            else if(t.type === "REPAY") t.locationLegs = {cash:amount, online:0};
+            else if(t.type === "TRANSFER") t.locationLegs = {cash:0, online:0};
+            else t.locationLegs = {cash:amount, online:0};
+        }
+        if(!t.lentLeg){
+            const amt = Number(t.amount || 0);
+            if(t.person && amt > 0 && t.type === "LEND") t.lentLeg = {person:t.person, amount:amt};
+            else if(t.person && amt > 0 && t.type === "REPAY") t.lentLeg = {person:t.person, amount:-amt};
+            else t.lentLeg = null;
+        }
+        if(t.reversalOf === undefined) t.reversalOf = null;
+        if(t.reversedBy === undefined) t.reversedBy = null;
+        if(t.note === undefined) t.note = "";
+    });
+}
+
+/* ---------------------------
+   LOCAL DATE HELPERS
+---------------------------- */
+
+function localDateString(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function today(){ return localDateString(new Date()); }
+function dateKey(d){ return localDateString(new Date(d)); }
+
+/* ---------------------------
+   UTILITIES
+---------------------------- */
+
+function createId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function money(value){
+    const n = Number(value || 0);
+    return "₹" + n.toLocaleString("en-IN",{maximumFractionDigits:2});
+}
+
+function number(value){
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function escapeHtml(str){
+    return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+/* ---------------------------
+   NAVIGATION
+---------------------------- */
+
+function showPage(page, button){
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    const target = document.getElementById("page-" + page);
+    if(target) target.classList.add("active");
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    if(button) button.classList.add("active");
+    updateUI();
+}
+
+function showPageById(page){
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    const pages = {dashboard:0, transactions:1, reports:2, lending:3, manage:4, backup:5};
+    const buttons = document.querySelectorAll(".nav-btn");
+    if(buttons[pages[page]]) buttons[pages[page]].classList.add("active");
+    showPage(page, buttons[pages[page]]);
+}
+
+/* ---------------------------
+   TOGGLE FORMS
+---------------------------- */
+
+function togglePanel(id){
+    const panel = document.getElementById(id);
+    if(!panel) return;
+    const wasOpen = panel.classList.contains("open");
+    document.querySelectorAll(".form-panel").forEach(p => p.classList.remove("open"));
+    if(!wasOpen){
+        panel.classList.add("open");
+        if(id === "spendMoneyPanel") initializeSpendRows();
+        if(id === "lendMoneyPanel") updateLendCategorySelect();
+        if(id === "repayMoneyPanel"){ updateRepayPeople(); updateRepayCategorySelect(); }
+        if(id === "addMoneyPanel") updateAddDistributionMode();
+    }
+}
+
+/* ---------------------------
+   BALANCE ENGINE
+---------------------------- */
+
+function calculateBalances(){
+    const balances = {
+        cash:number(data.settings.startingBalances.cash),
+        online:number(data.settings.startingBalances.online),
+        categories:{},
+        lent:0
+    };
+    activeAndInactiveCategoryList().forEach(c => balances.categories[c.id] = 0);
+    data.transactions.forEach(t => {
+        addLegs(balances, t.categoryLegs || {}, t.locationLegs || {}, t.lentLeg);
+    });
+    return balances;
+}
+
+function addLegs(balances, categoryLegs, locationLegs, lentLeg){
+    Object.entries(categoryLegs || {}).forEach(([id,value]) => {
+        if(balances.categories[id] === undefined) balances.categories[id] = 0;
+        balances.categories[id] += number(value);
+    });
+    balances.cash += number(locationLegs?.cash);
+    balances.online += number(locationLegs?.online);
+    if(lentLeg) balances.lent += number(lentLeg.amount);
+}
+
+/* ---------------------------
+   PEOPLE BALANCES
+---------------------------- */
+
+function calculatePeopleBalances(){
+    const people = {};
+    data.transactions.forEach(t => {
+        if(!t.lentLeg) return;
+        const person = t.lentLeg.person;
+        if(!person) return;
+        if(people[person] === undefined) people[person] = 0;
+        people[person] += number(t.lentLeg.amount);
+    });
+    return people;
+}
+
+/* ---------------------------
+   REVERSAL HELPERS
+---------------------------- */
+
+function isReversed(transactionId){
+    return data.transactions.some(t => t.reversalOf === transactionId);
+}
+
+function isTxReversed(t){
+    return Boolean(t.reversedBy) || isReversed(t.id);
+}
+
+function activeTransactions(){
+    return data.transactions.filter(t => !isTxReversed(t));
+}
+
+/* ---------------------------
+   VALIDATOR
+---------------------------- */
+
+function validateTransactionLegs(transaction){
+    if(!transaction){
+        return {valid:false, message:"Transaction is missing."};
+    }
+    const type = transaction.type;
+    const amount = number(transaction.amount);
+
+    if(!["ADD","SPEND","LEND","REPAY","REVERSAL","TRANSFER"].includes(type)){
+        return {valid:false, message:"Invalid transaction type."};
+    }
+
+    if(amount < 0.01 && type !== "REVERSAL"){
+        return {valid:false, message:"Transaction amount must be at least ₹0.01."};
+    }
+
+    const categoryLegs = transaction.categoryLegs || {};
+    const locationLegs = transaction.locationLegs || {};
+    const lentLeg = transaction.lentLeg;
+
+    const categoryTotal = Object.values(categoryLegs).reduce((sum,value) => sum + number(value), 0);
+    const cash = number(locationLegs.cash);
+    const online = number(locationLegs.online);
+    const locationTotal = cash + online;
+    const tolerance = 0.005;
+
+    if((type === "ADD" || type === "REPAY") && (cash < -tolerance || online < -tolerance)){
+        return {valid:false, message:"ADD/REPAY Cash and Online legs cannot be negative."};
+    }
+    if((type === "SPEND" || type === "LEND") && (cash > tolerance || online > tolerance)){
+        return {valid:false, message:"SPEND/LEND Cash and Online legs must be zero or negative."};
+    }
+
+    const validCategoryIds = new Set(data.settings.categories.map(c => c.id));
+    for(const categoryId of Object.keys(categoryLegs)){
+        if(!validCategoryIds.has(categoryId)){
+            return {valid:false, message:"Transaction contains an invalid category."};
+        }
+    }
+
+    if(type === "ADD"){
+        if(Math.abs(categoryTotal - amount) > tolerance) return {valid:false, message:"ADD category legs do not equal transaction amount."};
+        if(Math.abs(locationTotal - amount) > tolerance) return {valid:false, message:"ADD Cash + Online does not equal transaction amount."};
+        if(lentLeg) return {valid:false, message:"ADD transaction cannot contain a lent leg."};
+    }
+    else if(type === "SPEND"){
+        if(Math.abs(categoryTotal + amount) > tolerance) return {valid:false, message:"SPEND category legs do not equal transaction amount."};
+        if(Math.abs(locationTotal + amount) > tolerance) return {valid:false, message:"SPEND Cash + Online does not equal transaction amount."};
+        if(lentLeg) return {valid:false, message:"SPEND transaction cannot contain a lent leg."};
+    }
+    else if(type === "LEND"){
+        if(Math.abs(categoryTotal + amount) > tolerance) return {valid:false, message:"LEND category legs do not equal transaction amount."};
+        if(Math.abs(locationTotal + amount) > tolerance) return {valid:false, message:"LEND Cash + Online does not equal transaction amount."};
+        if(!lentLeg) return {valid:false, message:"LEND transaction must contain a lent leg."};
+        if(Math.abs(number(lentLeg.amount) - amount) > tolerance) return {valid:false, message:"LEND lent leg does not equal transaction amount."};
+        if(!lentLeg.person) return {valid:false, message:"LEND transaction must contain a person."};
+    }
+    else if(type === "REPAY"){
+        if(Math.abs(categoryTotal) > tolerance) return {valid:false, message:"REPAY transaction cannot change category balance."};
+        for(const value of Object.values(categoryLegs)){
+            if(Math.abs(number(value)) > tolerance) return {valid:false, message:"REPAY category legs must all be zero."};
+        }
+        if(Math.abs(locationTotal - amount) > tolerance) return {valid:false, message:"REPAY Cash + Online does not equal transaction amount."};
+        if(!lentLeg) return {valid:false, message:"REPAY transaction must contain a lent leg."};
+        if(Math.abs(number(lentLeg.amount) + amount) > tolerance) return {valid:false, message:"REPAY lent leg does not equal repayment amount."};
+        if(!lentLeg.person) return {valid:false, message:"REPAY transaction must contain a person."};
+    }
+    else if(type === "TRANSFER"){
+        const catKeys = Object.keys(categoryLegs);
+        if(catKeys.length !== 2) return {valid:false, message:"TRANSFER must have exactly 2 categories."};
+        if(Math.abs(categoryTotal) > tolerance) return {valid:false, message:"TRANSFER category total must equal zero."};
+        if(Math.abs(cash) > tolerance || Math.abs(online) > tolerance) return {valid:false, message:"TRANSFER cannot move Cash or Online money."};
+        if(lentLeg) return {valid:false, message:"TRANSFER cannot have a lent leg."};
+    }
+    else if(type === "REVERSAL"){
+        const original = data.transactions.find(x => x.id === transaction.reversalOf);
+        if(!original || original.type === "REVERSAL") return {valid:false, message:"REVERSAL must reference a valid original transaction."};
+        if(data.transactions.some(x => x.reversalOf === original.id && x.id !== transaction.id)){
+            return {valid:false, message:"This transaction is already reversed."};
+        }
+        const opposite = (a,b) => {
+            const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
+            for(const k of keys){
+                if(Math.abs(number(a?.[k]) + number(b?.[k])) > tolerance) return false;
+            }
+            return true;
+        };
+        if(!opposite(original.categoryLegs,categoryLegs) || !opposite(original.locationLegs,locationLegs)){
+            return {valid:false, message:"REVERSAL legs must be the exact opposite of the original."};
+        }
+        if(Math.abs(number(original.lentLeg?.amount) + number(lentLeg?.amount)) > tolerance ||
+           (original.lentLeg?.person || null) !== (lentLeg?.person || null)){
+            return {valid:false, message:"REVERSAL lent leg must be the exact opposite of the original."};
+        }
+    }
+
+    return {valid:true, message:"Transaction legs are valid."};
+}
+
+/* ---------------------------
+   CATEGORY HELPERS
+---------------------------- */
+
+function activeCategories(){ return data.settings.categories.filter(c => c.active); }
+function activeAndInactiveCategoryList(){ return data.settings.categories; }
+function categoryName(id){
+    const c = data.settings.categories.find(x => x.id === id);
+    return c ? c.name : id;
+}
+
+/* ---------------------------
+   UI UPDATE
+---------------------------- */
+
+function updateUI(){
+    const balances = calculateBalances();
+    const total = balances.cash + balances.online;
+    document.getElementById("totalBalance").textContent = money(total);
+    document.getElementById("cashBalance").textContent = money(balances.cash);
+    document.getElementById("onlineBalance").textContent = money(balances.online);
+    document.getElementById("lentBalance").textContent = money(balances.lent);
+    updateCategories();
+    updatePeople();
+    renderHistory();
+    renderRecentTransactions();
+    updateReports();
+    updateLendingPage();
+    renderCategorySettings();
+    updateManageStartingBalances();
+    updateFilterCategories();
+    updateLendCategorySelect();
+    updateRepayPeople();
+    updateRepayCategorySelect();
+    updateAddPaymentTotal();
+    refreshAddSpecificCategoryOptions();
+    document.body.classList.toggle("dark", Boolean(data.settings.darkMode));
+}
+
+/* ---------------------------
+   CATEGORY UI
+---------------------------- */
+
+function updateCategories(){
+    const container = document.getElementById("categoryGrid");
+    if(!container) return;
+    const balances = calculateBalances().categories;
+    const active = activeCategories();
+    if(active.length === 0){
+        container.innerHTML = `<div class="empty">No active categories.</div>`;
+        return;
+    }
+    const max = Math.max(1, ...active.map(c => Math.max(0,number(balances[c.id]))));
+    container.innerHTML = active.map(c => {
+        const value = number(balances[c.id]);
+        const percent = Math.max(0,Math.min(100,value/max*100));
+        return `<div class="category-card">
+            <div class="category-top">
+                <span class="category-name">${escapeHtml(c.name)}</span>
+                <span class="category-amount">${money(value)}</span>
+            </div>
+            <div class="progress"><div class="progress-fill" style="width:${percent}%"></div></div>
+            <div class="transaction-meta">Allocation: ${number(c.percentage)}%</div>
+        </div>`;
+    }).join("");
+}
+
+/* ---------------------------
+   ADD MONEY
+---------------------------- */
+
+function updateAddPaymentTotal(){
+    const cash = number(document.getElementById("addCash")?.value);
+    const online = number(document.getElementById("addOnline")?.value);
+    const el = document.getElementById("addPaymentTotal");
+    if(el) el.textContent = money(cash + online);
+}
+
+function refreshAddSpecificCategoryOptions(){
+    const box = document.getElementById("addSpecificCategoryBox");
+    if(!box || box.style.display === "none") return;
+    const select = document.getElementById("addSpecificCategory");
+    if(!select) return;
+    const active = activeCategories();
+    const current = select.value;
+    select.innerHTML = active.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+    if(active.some(c => c.id === current)) select.value = current;
+    else if(active.length) select.value = active[0].id;
+}
+
+function updateAddDistributionMode(){
+    const mode = document.getElementById("addDistributionMode").value;
+    const box = document.getElementById("addSpecificCategoryBox");
+    const categorySelect = document.getElementById("addSpecificCategory");
+    if(mode === "specific"){
+        box.style.display = "block";
+        const active = activeCategories();
+        categorySelect.innerHTML = active.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+        if(active.length) categorySelect.value = active[0].id;
+    } else {
+        box.style.display = "none";
+    }
+}
+
+function updateAddPaymentMode(){
+    const mode = document.getElementById("addPaymentMode").value;
+    const amount = number(document.getElementById("addAmount").value);
+    const splitBox = document.getElementById("addSplitPayment");
+    const cashInput = document.getElementById("addCash");
+    const onlineInput = document.getElementById("addOnline");
+    if(mode === "cash"){ splitBox.style.display = "none"; cashInput.value = amount; onlineInput.value = 0; }
+    else if(mode === "online"){ splitBox.style.display = "none"; cashInput.value = 0; onlineInput.value = amount; }
+    else { splitBox.style.display = "block"; }
+    updateAddPaymentTotal();
+}
+
+function addMoney(){
+    const amount = number(document.getElementById("addAmount").value);
+    const mode = document.getElementById("addPaymentMode").value;
+    const distributionMode = document.getElementById("addDistributionMode").value;
+    const date = document.getElementById("addDate").value || today();
+    const note = document.getElementById("addNote").value.trim();
+    const message = document.getElementById("addMoneyMessage");
+
+    if(amount <= 0){ message.innerHTML = `<div class="notice error">Enter a valid amount.</div>`; return; }
+
+    let cash = 0, online = 0;
+    if(mode === "cash"){ cash = amount; }
+    else if(mode === "online"){ online = amount; }
+    else if(mode === "both"){
+        cash = number(document.getElementById("addCash").value);
+        online = number(document.getElementById("addOnline").value);
+        if(cash < 0 || online < 0){ showNotification("Cash and Online amounts cannot be negative."); return; }
+        if(Math.abs(cash + online - amount) > 0.005){ showNotification("Cash + Online must equal the total amount."); return; }
+    }
+
+    const active = activeCategories();
+    const categoryLegs = {};
+
+    if(distributionMode === "auto"){
+        const allocationTotal = active.reduce((sum,c) => sum + number(c.percentage), 0);
+        if(Math.abs(allocationTotal - 100) > 0.001){ showNotification("Category allocation must equal 100%."); return; }
+        active.forEach(c => { categoryLegs[c.id] = amount * c.percentage / 100; });
+    } else if(distributionMode === "specific"){
+        const category = document.getElementById("addSpecificCategory").value;
+        if(!category || !active.some(c => c.id === category)){ showNotification("Select a valid active category."); return; }
+        categoryLegs[category] = amount;
+    }
+
+    const transaction = {
+        id:createId(), type:"ADD", amount:amount, date:date,
+        time:new Date().toTimeString().slice(0,5), timestamp:Date.now(),
+        categoryLegs:categoryLegs, locationLegs:{cash:cash, online:online},
+        lentLeg:null, note:note, reversalOf:null, reversedBy:null
+    };
+
+    const validation = validateTransactionLegs(transaction);
+    if(!validation.valid){ showNotification(validation.message); return; }
+
+    data.transactions.push(transaction);
+    saveData();
+
+    showNotification("Money added successfully.");
+    document.getElementById("addAmount").value="";
+    document.getElementById("addCash").value="0";
+    document.getElementById("addOnline").value="0";
+    document.getElementById("addNote").value="";
+    document.getElementById("addPaymentMode").value="cash";
+    document.getElementById("addDistributionMode").value="auto";
+    document.getElementById("addSpecificCategoryBox").style.display="none";
+    updateAddPaymentMode();
+    updateAddDistributionMode();
+    updateUI();
+}
+
+/* ---------------------------
+   SPENDING ROWS
+---------------------------- */
+
+function initializeSpendRows(){
+    if(spendLocationRows.length === 0){ spendLocationRows = [{id:createId(),location:"cash",amount:0}]; }
+    if(spendCategoryRows.length === 0){
+        const first = activeCategories()[0];
+        spendCategoryRows = first ? [{id:createId(),category:first.id,amount:0}] : [];
+    }
+    renderSpendRows();
+}
+
+function addSpendCategoryRow(){
+    const first = activeCategories()[0];
+    if(!first) return;
+    spendCategoryRows.push({id:createId(), category:first.id, amount:0});
+    renderSpendRows();
+}
+
+function removeSpendCategoryRow(id){
+    spendCategoryRows = spendCategoryRows.filter(x => x.id !== id);
+    renderSpendRows();
+}
+
+function renderSpendRows(){
+    const cat = document.getElementById("spendCategoryRows");
+    if(cat){
+        const categories = activeCategories();
+        const activeIds = categories.map(c => c.id);
+        if(activeIds.length){
+            spendCategoryRows.forEach(r => { if(!activeIds.includes(r.category)) r.category = activeIds[0]; });
+        }
+        cat.innerHTML = spendCategoryRows.map(row => `
+            <div class="split-row">
+                <select onchange="changeSpendCategory('${row.id}',this.value)">
+                    ${categories.map(c => `<option value="${escapeHtml(c.id)}" ${row.category===c.id?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}
+                </select>
+                <input type="number" min="0" step="0.01" value="${row.amount}" oninput="changeSpendCategoryAmount('${row.id}',this.value)">
+                <button onclick="removeSpendCategoryRow('${row.id}')">×</button>
+            </div>
+        `).join("");
+    }
+    updateSpendTotals();
+}
+
+function changeSpendCategory(id,value){
+    const row = spendCategoryRows.find(x => x.id === id);
+    if(row) row.category = value;
+    updateSpendTotals();
+}
+
+function changeSpendCategoryAmount(id,value){
+    const row = spendCategoryRows.find(x => x.id === id);
+    if(row) row.amount = number(value);
+    updateSpendTotals();
+}
+
+function updateSpendPaymentMode(){
+    const mode = document.getElementById("spendPaymentMode").value;
+    const amount = number(document.getElementById("spendAmount").value);
+    const splitBox = document.getElementById("spendSplitPayment");
+    const cashInput = document.getElementById("spendCash");
+    const onlineInput = document.getElementById("spendOnline");
+    if(mode === "cash"){ splitBox.style.display = "none"; cashInput.value = amount; onlineInput.value = 0; }
+    else if(mode === "online"){ splitBox.style.display = "none"; cashInput.value = 0; onlineInput.value = amount; }
+    else { splitBox.style.display = "block"; }
+    updateSpendTotals();
+}
+
+function updateSpendTotals(){
+    const amount = number(document.getElementById("spendAmount").value);
+    const mode = document.getElementById("spendPaymentMode").value;
+    let payment = 0;
+    if(mode === "cash") payment = amount;
+    else if(mode === "online") payment = amount;
+    else if(mode === "both") payment = number(document.getElementById("spendCash").value) + number(document.getElementById("spendOnline").value);
+    const categories = spendCategoryRows.reduce((sum,r) => sum + number(r.amount), 0);
+    const p = document.getElementById("spendPaymentTotal");
+    const c = document.getElementById("spendCategoryTotal");
+    if(p) p.textContent = money(payment);
+    if(c) c.textContent = money(categories);
+}
+
+/* ---------------------------
+   SPEND MONEY
+---------------------------- */
+
+function spendMoney(){
+    const amount = number(document.getElementById("spendAmount").value);
+    const mode = document.getElementById("spendPaymentMode").value;
+    const date = document.getElementById("spendDate").value || today();
+    const note = document.getElementById("spendNote").value.trim();
+    const message = document.getElementById("spendMoneyMessage");
+
+    if(amount <= 0){ message.innerHTML = `<div class="notice error">Enter a valid spending amount.</div>`; return; }
+
+    let cash = 0, online = 0;
+    if(mode === "cash"){ cash = amount; }
+    else if(mode === "online"){ online = amount; }
+    else if(mode === "both"){
+        cash = number(document.getElementById("spendCash").value);
+        online = number(document.getElementById("spendOnline").value);
+        if(cash < 0 || online < 0){ showNotification("Cash and Online amounts cannot be negative."); return; }
+        if(Math.abs(cash + online - amount) > 0.005){ message.innerHTML = `<div class="notice error">Cash + Online must equal spending amount.</div>`; return; }
+    }
+
+    const categoryTotal = spendCategoryRows.reduce((sum,r) => sum + number(r.amount), 0);
+    if(Math.abs(categoryTotal - amount) > 0.005){ message.innerHTML = `<div class="notice error">Category total must equal spending amount.</div>`; return; }
+
+    const balances = calculateBalances();
+    const locationLegs = {cash:-cash, online:-online};
+    if(balances.cash + locationLegs.cash < -0.005){ message.innerHTML = `<div class="notice error">Insufficient Cash balance.</div>`; return; }
+    if(balances.online + locationLegs.online < -0.005){ message.innerHTML = `<div class="notice error">Insufficient Online balance.</div>`; return; }
+
+    const categoryLegs = {};
+    for(const row of spendCategoryRows){
+        const value = number(row.amount);
+        if(value < 0){ showNotification("Category amount cannot be negative."); return; }
+        categoryLegs[row.category] = number(categoryLegs[row.category]) - value;
+        const current = number(balances.categories[row.category]);
+        if(current + categoryLegs[row.category] < -0.005){
+            message.innerHTML = `<div class="notice error">Insufficient balance in ${escapeHtml(categoryName(row.category))}.</div>`;
+            return;
+        }
+    }
+
+    const transaction = {
+        id:createId(), type:"SPEND", amount:amount, date:date,
+        time:new Date().toTimeString().slice(0,5), timestamp:Date.now(),
+        categoryLegs:categoryLegs, locationLegs:locationLegs, lentLeg:null,
+        note:note, reversalOf:null, reversedBy:null
+    };
+
+    const validation = validateTransactionLegs(transaction);
+    if(!validation.valid){ showNotification(validation.message); return; }
+
+    data.transactions.push(transaction);
+    saveData();
+
+    message.innerHTML = `<div class="notice success">Spending recorded successfully.</div>`;
+    document.getElementById("spendAmount").value="";
+    document.getElementById("spendNote").value="";
+    document.getElementById("spendPaymentMode").value="cash";
+    document.getElementById("spendCash").value="0";
+    document.getElementById("spendOnline").value="0";
+    updateSpendPaymentMode();
+    const first = activeCategories()[0];
+    spendCategoryRows = first ? [{id:createId(),category:first.id,amount:0}] : [];
+    renderSpendRows();
+    updateUI();
+}
+
+/* ---------------------------
+   LENDING
+---------------------------- */
+
+function updateLendCategorySelect(){
+    const select = document.getElementById("lendCategory");
+    if(!select) return;
+    const current = select.value;
+    const active = activeCategories();
+    select.innerHTML = active.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+    if(active.some(c => c.id === current)) select.value = current;
+    else if(active.length) select.value = active[0].id;
+}
+
+function updateLendPaymentMode(){
+    const mode = document.getElementById("lendPaymentMode").value;
+    const amount = number(document.getElementById("lendAmount").value);
+    const splitBox = document.getElementById("lendSplitPayment");
+    const cashInput = document.getElementById("lendCash");
+    const onlineInput = document.getElementById("lendOnline");
+    if(mode === "cash"){ splitBox.style.display = "none"; cashInput.value = amount; onlineInput.value = 0; }
+    else if(mode === "online"){ splitBox.style.display = "none"; cashInput.value = 0; onlineInput.value = amount; }
+    else { splitBox.style.display = "block"; }
+    updateLendPaymentTotal();
+}
+
+function updateLendPaymentTotal(){
+    const mode = document.getElementById("lendPaymentMode").value;
+    const amount = number(document.getElementById("lendAmount").value);
+    let payment = 0;
+    if(mode === "cash" || mode === "online") payment = amount;
+    else if(mode === "both") payment = number(document.getElementById("lendCash").value) + number(document.getElementById("lendOnline").value);
+    const totalBox = document.getElementById("lendPaymentTotal");
+    if(totalBox) totalBox.textContent = money(payment);
+}
+
+function lendMoney(){
+    const person = document.getElementById("lendPerson").value.trim();
+    const amount = number(document.getElementById("lendAmount").value);
+    const mode = document.getElementById("lendPaymentMode").value;
+    const category = document.getElementById("lendCategory").value;
+    const note = document.getElementById("lendNote").value.trim();
+
+    if(!person){ showNotification("Enter the person's name."); return; }
+    if(amount <= 0){ showNotification("Enter a valid lending amount."); return; }
+    if(!category || !activeCategories().some(c => c.id === category)){ showNotification("Select a valid active category."); return; }
+
+    let cash = 0, online = 0;
+    if(mode === "cash") cash = amount;
+    else if(mode === "online") online = amount;
+    else if(mode === "both"){
+        cash = number(document.getElementById("lendCash").value);
+        online = number(document.getElementById("lendOnline").value);
+        if(cash < 0 || online < 0){ showNotification("Cash and Online amounts cannot be negative."); return; }
+        if(Math.abs(cash + online - amount) > 0.005){ showNotification("Cash + Online must equal lending amount."); return; }
+    }
+
+    const balances = calculateBalances();
+    if(balances.cash - cash < -0.005){ showNotification("Insufficient Cash balance."); return; }
+    if(balances.online - online < -0.005){ showNotification("Insufficient Online balance."); return; }
+    const categoryBalance = number(balances.categories[category]);
+    if(categoryBalance - amount < -0.005){ showNotification(`Insufficient balance in ${escapeHtml(categoryName(category))}.`); return; }
+
+    const transaction = {
+        id:createId(), type:"LEND", amount:amount, date:today(),
+        time:new Date().toTimeString().slice(0,5), timestamp:Date.now(),
+        categoryLegs:{[category]:-amount}, locationLegs:{cash:-cash, online:-online},
+        lentLeg:{person:person, amount:amount}, person:person, note:note,
+        reversalOf:null, reversedBy:null
+    };
+
+    const validation = validateTransactionLegs(transaction);
+    if(!validation.valid){ showNotification(validation.message); return; }
+
+    data.transactions.push(transaction);
+    saveData();
+
+    showNotification("Money lent successfully.");
+    document.getElementById("lendPerson").value="";
+    document.getElementById("lendAmount").value="";
+    document.getElementById("lendNote").value="";
+    document.getElementById("lendPaymentMode").value="cash";
+    document.getElementById("lendCash").value="0";
+    document.getElementById("lendOnline").value="0";
+    updateLendPaymentMode();
+    updateUI();
+}
+
+/* ---------------------------
+   PEOPLE
+---------------------------- */
+
+function updatePeople(){
+    const container = document.getElementById("peopleList");
+    if(!container) return;
+    const people = calculatePeopleBalances();
+    const entries = Object.entries(people).filter(([p,a]) => a > 0.005).sort((a,b) => b[1]-a[1]);
+    if(entries.length === 0){ container.innerHTML = `<div class="empty">No outstanding lending.</div>`; return; }
+    container.innerHTML = entries.map(([person,amount]) => `
+        <div class="person-row">
+            <div><strong>${escapeHtml(person)}</strong><div class="transaction-meta">Outstanding</div></div>
+            <strong>${money(amount)}</strong>
+        </div>
+    `).join("");
+}
+
+/* ---------------------------
+   REPAYMENT
+---------------------------- */
+
+function updateRepayPeople(){
+    const select = document.getElementById("repayPerson");
+    if(!select) return;
+    const people = calculatePeopleBalances();
+    const entries = Object.entries(people).filter(([p,a]) => a > 0.005);
+    const current = select.value;
+    select.innerHTML = entries.length
+        ? entries.map(([person,amount]) => `<option value="${escapeHtml(person)}">${escapeHtml(person)} — ${money(amount)}</option>`).join("")
+        : `<option value="">No outstanding people</option>`;
+    if(entries.some(([p]) => p === current)) select.value = current;
+    updateRepayCategorySelect(select.value);
+}
+
+function updateRepayCategorySelect(person){
+    const select = document.getElementById("repayCategory");
+    if(!select) return;
+    const active = activeCategories();
+    if(active.length === 0){ select.innerHTML = ""; return; }
+    let defaultCategory = null;
+    if(person){
+        for(let i = data.transactions.length - 1; i >= 0; i--){
+            const t = data.transactions[i];
+            if(t.type !== "LEND" || t.person !== person || !t.categoryLegs) continue;
+            const categories = Object.keys(t.categoryLegs).filter(id => Math.abs(number(t.categoryLegs[id])) > 0.005);
+            if(categories.length > 0){ defaultCategory = categories[0]; break; }
+        }
+    }
+    select.innerHTML = active.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+    if(defaultCategory && active.some(c => c.id === defaultCategory)) select.value = defaultCategory;
+    else select.value = active[0].id;
+}
+
+function updateRepayPaymentMode(){
+    const mode = document.getElementById("repayPaymentMode").value;
+    const amount = number(document.getElementById("repayAmount").value);
+    const splitBox = document.getElementById("repaySplitPayment");
+    const cashInput = document.getElementById("repayCash");
+    const onlineInput = document.getElementById("repayOnline");
+    if(mode === "cash"){ splitBox.style.display = "none"; cashInput.value = amount; onlineInput.value = 0; }
+    else if(mode === "online"){ splitBox.style.display = "none"; cashInput.value = 0; onlineInput.value = amount; }
+    else { splitBox.style.display = "block"; }
+    updateRepayPaymentTotal();
+}
+
+function updateRepayPaymentTotal(){
+    const mode = document.getElementById("repayPaymentMode").value;
+    const amount = number(document.getElementById("repayAmount").value);
+    let payment = 0;
+    if(mode === "cash" || mode === "online") payment = amount;
+    else if(mode === "both") payment = number(document.getElementById("repayCash").value) + number(document.getElementById("repayOnline").value);
+    const totalBox = document.getElementById("repayPaymentTotal");
+    if(totalBox) totalBox.textContent = money(payment);
+}
+
+function repayMoney(){
+    const person = document.getElementById("repayPerson").value;
+    const amount = number(document.getElementById("repayAmount").value);
+    const mode = document.getElementById("repayPaymentMode").value;
+    const note = document.getElementById("repayNote").value.trim();
+
+    if(!person){ showNotification("Select a person."); return; }
+    if(amount <= 0){ showNotification("Enter a valid amount."); return; }
+
+    updateRepayCategorySelect(person);
+    const category = document.getElementById("repayCategory").value;
+
+    let cash = 0, online = 0;
+    if(mode === "cash") cash = amount;
+    else if(mode === "online") online = amount;
+    else if(mode === "both"){
+        cash = number(document.getElementById("repayCash").value);
+        online = number(document.getElementById("repayOnline").value);
+        if(cash < 0 || online < 0){ showNotification("Cash and Online amounts cannot be negative."); return; }
+        if(Math.abs(cash + online - amount) > 0.005){ showNotification("Cash + Online must equal repayment amount."); return; }
+    }
+
+    const people = calculatePeopleBalances();
+    const owed = number(people[person]);
+    if(owed <= 0){ showNotification("This person has no outstanding amount."); return; }
+    if(amount > owed + 0.005){ showNotification("Repayment cannot exceed outstanding amount."); return; }
+
+    const transaction = {
+        id:createId(), type:"REPAY", amount:amount, person:person,
+        date:today(), time:new Date().toTimeString().slice(0,5), timestamp:Date.now(),
+        categoryLegs:{[category]:0}, locationLegs:{cash:cash, online:online},
+        lentLeg:{person:person, amount:-amount}, note:note,
+        reversalOf:null, reversedBy:null
+    };
+
+    const validation = validateTransactionLegs(transaction);
+    if(!validation.valid){ showNotification(validation.message); return; }
+
+    data.transactions.push(transaction);
+    saveData();
+
+    showNotification("Repayment recorded successfully.");
+    document.getElementById("repayAmount").value="";
+    document.getElementById("repayNote").value="";
+    document.getElementById("repayPaymentMode").value="cash";
+    document.getElementById("repayCash").value="0";
+    document.getElementById("repayOnline").value="0";
+    updateRepayPaymentMode();
+    updateUI();
+}
+
+/* ---------------------------
+   CATEGORY TRANSFER
+---------------------------- */
+
+function openTransferModal(fromId){
+    const fromCategory = data.settings.categories.find(c => c.id === fromId);
+    if(!fromCategory) return;
+
+    const balances = calculateBalances();
+    const currentBalance = number(balances.categories[fromId]);
+
+    if(Math.abs(currentBalance) < 0.005){ showNotification("This category has no balance to transfer."); return; }
+
+    _transferFromId = fromId;
+
+    const toSelect = document.getElementById("transferToCategory");
+    const otherCategories = activeCategories().filter(c => c.id !== fromId);
+
+    if(otherCategories.length === 0){ showNotification("No other active category available."); return; }
+
+    toSelect.innerHTML = otherCategories.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+    document.getElementById("transferFromCategory").textContent = fromCategory.name;
+    document.getElementById("transferFromBalance").textContent = money(currentBalance);
+
+    const amountInput = document.getElementById("transferAmount");
+    amountInput.value = currentBalance.toFixed(2);
+    amountInput.max = currentBalance.toFixed(2);
+
+    openModal("transferModal");
+}
+
+function confirmTransfer(){
+    if(!_transferFromId) return;
+    const fromId = _transferFromId;
+    const toId = document.getElementById("transferToCategory").value;
+    const amount = number(document.getElementById("transferAmount").value);
+
+    if(!toId){ showNotification("Select a destination category."); return; }
+    if(toId === fromId){ showNotification("Cannot transfer to the same category."); return; }
+    if(amount <= 0){ showNotification("Enter a valid transfer amount."); return; }
+
+    const balances = calculateBalances();
+    const fromBalance = number(balances.categories[fromId]);
+    if(amount > fromBalance + 0.005){ showNotification("Transfer amount exceeds available balance."); return; }
+
+    const categoryLegs = {};
+    categoryLegs[fromId] = -amount;
+    categoryLegs[toId] = amount;
+
+    const transaction = {
+        id:createId(), type:"TRANSFER", amount:amount, date:today(),
+        time:new Date().toTimeString().slice(0,5), timestamp:Date.now(),
+        categoryLegs:categoryLegs, locationLegs:{cash:0, online:0},
+        lentLeg:null, note:"Transfer from " + categoryName(fromId) + " to " + categoryName(toId),
+        reversalOf:null, reversedBy:null
+    };
+
+    const validation = validateTransactionLegs(transaction);
+    if(!validation.valid){ showNotification(validation.message); return; }
+
+    data.transactions.push(transaction);
+    saveData();
+
+    showNotification("Transferred " + money(amount) + " from " + categoryName(fromId) + " to " + categoryName(toId));
+    closeModal("transferModal");
+    _transferFromId = null;
+    updateUI();
+}
+
+/* ---------------------------
+   TRANSACTION DESCRIPTION
+---------------------------- */
+
+function transactionDescription(t){
+    if(t.type === "ADD") return "Money Added";
+    if(t.type === "SPEND") return "Money Spent";
+    if(t.type === "LEND") return `Lent to ${t.person || "Unknown"}`;
+    if(t.type === "REPAY") return `Repayment from ${t.person || "Unknown"}`;
+    if(t.type === "TRANSFER") return "Category Transfer";
+    if(t.type === "REVERSAL") return "Transaction Reversal";
+    return t.type;
+}
+
+function transactionDisplayAmount(t){
+    if(t.type === "ADD") return t.amount;
+    if(t.type === "REPAY") return t.amount;
+    if(t.type === "TRANSFER") return 0;
+    if(t.type === "REVERSAL"){
+        const cash = number(t.locationLegs?.cash);
+        const online = number(t.locationLegs?.online);
+        return cash + online;
+    }
+    return -Math.abs(number(t.amount));
+}
+
+/* ---------------------------
+   TRANSACTION HISTORY
+---------------------------- */
+
+function filteredTransactions(){
+    let list = [...data.transactions].sort((a,b) => b.timestamp-a.timestamp);
+    const search = document.getElementById("searchTransactions")?.value?.trim().toLowerCase() || "";
+    const type = document.getElementById("filterType")?.value || "";
+    const category = document.getElementById("filterCategory")?.value || "";
+    const location = document.getElementById("filterLocation")?.value || "";
+    const date = document.getElementById("filterDate")?.value || "";
+
+    list = list.filter(t => {
+        if(type && t.type !== type) return false;
+        if(date && t.date !== date) return false;
+        if(category){
+            if(!Object.keys(t.categoryLegs || {}).includes(category)) return false;
+            if(Math.abs(number(t.categoryLegs[category])) < 0.005) return false;
+        }
+        if(location){
+            if(Math.abs(number(t.locationLegs?.[location])) < 0.005) return false;
+        }
+        if(search){
+            const text = [t.type, t.person, t.note, t.date, t.time, transactionDescription(t)].join(" ").toLowerCase();
+            if(!text.includes(search)) return false;
+        }
+        return true;
+    });
+    return list;
+}
+
+function renderHistory(){
+    const container = document.getElementById("history");
+    if(!container) return;
+    const list = filteredTransactions();
+    if(list.length === 0){ container.innerHTML = `<div class="empty">No transactions found.</div>`; return; }
+    container.innerHTML = list.map(transactionHTML).join("");
+}
+
+function renderRecentTransactions(){
+    const container = document.getElementById("recentTransactions");
+    if(!container) return;
+    const list = [...data.transactions].sort((a,b) => b.timestamp-a.timestamp).slice(0,5);
+    if(list.length === 0){ container.innerHTML = `<div class="empty">No transactions yet.</div>`; return; }
+    container.innerHTML = list.map(transactionHTML).join("");
+}
+
+function transactionHTML(t){
+    const displayAmount = transactionDisplayAmount(t);
+    let amountClass = "amount-neutral";
+    if(displayAmount > 0) amountClass="amount-positive";
+    if(displayAmount < 0) amountClass="amount-negative";
+
+    const reversed = isTxReversed(t) ? `<span class="badge reversed">Reversed</span>` : "";
+    const reversalTag = t.reversalOf ? `<span class="badge">Reversal</span>` : "";
+
+    return `<div class="transaction">
+        <div class="transaction-top">
+            <div>
+                <div class="transaction-title">
+                    ${escapeHtml(transactionDescription(t))}
+                    ${reversed}
+                    ${reversalTag}
+                </div>
+                <div class="transaction-meta">${escapeHtml(t.date || "")} · ${escapeHtml(t.time || "")}</div>
+            </div>
+            <div class="${amountClass}">${displayAmount >= 0 ? "+" : ""}${money(displayAmount)}</div>
+        </div>
+        ${t.note ? `<div class="transaction-meta">Note: ${escapeHtml(t.note)}</div>` : ""}
+        <div class="transaction-actions">
+            <button class="small-btn" onclick="showTransactionDetails('${t.id}')">Details</button>
+            ${(!isTxReversed(t) && t.type !== "REVERSAL") ? `<button class="small-btn danger" onclick="openReverseModal('${t.id}')">Reverse</button>` : ""}
+        </div>
+    </div>`;
+}
+
+/* ---------------------------
+   TRANSACTION DETAILS
+---------------------------- */
+
+function showTransactionDetails(id){
+    const t = data.transactions.find(x => x.id === id);
+    if(!t) return;
+
+    const categoryRows = Object.entries(t.categoryLegs || {})
+        .filter(([id,value]) => Math.abs(number(value)) > 0.005)
+        .map(([id,value]) => `<tr><td>${escapeHtml(categoryName(id))}</td><td>${money(value)}</td></tr>`)
+        .join("");
+
+    const locationRows = Object.entries(t.locationLegs || {})
+        .filter(([id,value]) => Math.abs(number(value)) > 0.005)
+        .map(([id,value]) => `<tr><td>${escapeHtml(id)}</td><td>${money(value)}</td></tr>`)
+        .join("");
+
+    document.getElementById("transactionDetails").innerHTML = `
+        <p><strong>Type:</strong> ${escapeHtml(transactionDescription(t))}</p>
+        <p><strong>Date:</strong> ${escapeHtml(t.date || "")} ${escapeHtml(t.time || "")}</p>
+        ${t.person ? `<p><strong>Person:</strong> ${escapeHtml(t.person)}</p>` : ""}
+        ${t.note ? `<p><strong>Note:</strong> ${escapeHtml(t.note)}</p>` : ""}
+        <h4>Category Legs</h4>
+        <div class="table-wrap"><table><thead><tr><th>Category</th><th>Change</th></tr></thead>
+        <tbody>${categoryRows || `<tr><td colspan="2">None</td></tr>`}</tbody></table></div>
+        <h4>Location Legs</h4>
+        <div class="table-wrap"><table><thead><tr><th>Location</th><th>Change</th></tr></thead>
+        <tbody>${locationRows || `<tr><td colspan="2">None</td></tr>`}</tbody></table></div>
+        ${t.lentLeg ? `<h4>Lent Leg</h4><p>${escapeHtml(t.lentLeg.person)} : ${money(t.lentLeg.amount)}</p>` : ""}
+    `;
+    openModal("transactionModal");
+}
+
+/* ---------------------------
+   REVERSAL
+---------------------------- */
+
+function openReverseModal(id){
+    const t = data.transactions.find(x => x.id === id);
+    if(!t) return;
+    if(isTxReversed(t)){ alert("This transaction is already reversed."); return; }
+    if(t.type === "REVERSAL"){ alert("A reversal transaction cannot be reversed."); return; }
+
+    pendingReverseId=id;
+    document.getElementById("reverseDetails").innerHTML = `
+        <p><strong>${escapeHtml(transactionDescription(t))}</strong></p>
+        <p>Amount: <strong>${money(t.amount)}</strong></p>
+        <p>Date: ${escapeHtml(t.date || "")}</p>
+    `;
+    openModal("reverseModal");
+}
+
+function getProjectedBalancesAfterReversal(original){
+    const current = calculateBalances();
+    const projected = {cash:current.cash, online:current.online, categories:{...current.categories}, lent:current.lent};
+    Object.entries(original.locationLegs || {}).forEach(([location,value]) => { projected[location] -= number(value); });
+    Object.entries(original.categoryLegs || {}).forEach(([category,value]) => {
+        if(projected.categories[category] === undefined) projected.categories[category] = 0;
+        projected.categories[category] -= number(value);
+    });
+    if(original.lentLeg) projected.lent -= number(original.lentLeg.amount);
+
+    const people = calculatePeopleBalances();
+    projected.people = {};
+    Object.entries(people).forEach(([person,balance]) => { projected.people[person] = number(balance); });
+    if(original.lentLeg){
+        const person = original.lentLeg.person;
+        projected.people[person] = number(projected.people[person]) - number(original.lentLeg.amount);
+    }
+    return projected;
+}
+
+function confirmReverse(){
+    if(!pendingReverseId) return;
+    const original = data.transactions.find(x => x.id === pendingReverseId);
+    if(!original) return;
+    if(isTxReversed(original)){ alert("Already reversed."); return; }
+
+    const projected = getProjectedBalancesAfterReversal(original);
+    if(projected.cash < -0.005){ alert("Cannot reverse: final Cash balance would become negative."); return; }
+    if(projected.online < -0.005){ alert("Cannot reverse: final Online balance would become negative."); return; }
+    for(const [id,value] of Object.entries(projected.categories)){
+        if(value < -0.005){ alert("Cannot reverse: final balance of " + categoryName(id) + " would become negative."); return; }
+    }
+    if(projected.lent < -0.005){ alert("Cannot reverse: final lent balance would become negative."); return; }
+    for(const [person,balance] of Object.entries(projected.people)){
+        if(balance < -0.005){ alert("Cannot reverse: final balance for " + person + " would become negative."); return; }
+    }
+
+    const reversal = {
+        id:createId(), type:"REVERSAL", amount:original.amount, date:today(),
+        time:new Date().toTimeString().slice(0,5), timestamp:Date.now(),
+        categoryLegs:{}, locationLegs:{}, lentLeg:null,
+        reversalOf:original.id, reversedBy:null, note:"Reversal of " + original.id
+    };
+
+    Object.entries(original.categoryLegs || {}).forEach(([id,value]) => { reversal.categoryLegs[id] = -number(value); });
+    Object.entries(original.locationLegs || {}).forEach(([id,value]) => { reversal.locationLegs[id] = -number(value); });
+    if(original.lentLeg){
+        reversal.lentLeg = {person:original.lentLeg.person, amount:-number(original.lentLeg.amount)};
+    }
+
+    const validation = validateTransactionLegs(reversal);
+    if(!validation.valid){ showNotification(validation.message); return; }
+
+    data.transactions.push(reversal);
+    saveData();
+    closeModal("reverseModal");
+    pendingReverseId=null;
+    updateUI();
+}
+
+/* ---------------------------
+   REPORTS
+---------------------------- */
+
+function updateReports(){
+    const active = activeTransactions();
+    const added = active.filter(t => t.type==="ADD").reduce((s,t)=>s+number(t.amount),0);
+    const spent = active.filter(t => t.type==="SPEND").reduce((s,t)=>s+number(t.amount),0);
+    const lent = active.filter(t => t.type==="LEND").reduce((s,t)=>s+number(t.amount),0);
+    const repay = active.filter(t => t.type==="REPAY").reduce((s,t)=>s+number(t.amount),0);
+    setText("reportAdded",money(added));
+    setText("reportSpent",money(spent));
+    setText("reportLent",money(lent));
+    setText("reportRepay",money(repay));
+    renderWeeklyChart();
+    renderWeeklySpendChart();
+    renderCategoryReport();
+    renderLocationReport();
+}
+
+function setText(id,value){
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+}
+
+function getLastSevenDates(){
+    const dates=[];
+    const now = new Date();
+    for(let i=6;i>=0;i--){
+        const d = new Date(now);
+        d.setDate(now.getDate()-i);
+        dates.push(localDateString(d));
+    }
+    return dates;
+}
+
+function renderWeeklyChart(){
+    const container = document.getElementById("weeklyChart");
+    if(!container) return;
+    const dates = getLastSevenDates();
+    const active = activeTransactions();
+    const values = dates.map(date => active.filter(t => t.type==="ADD" && t.date===date).reduce((s,t)=>s+number(t.amount),0));
+    renderBars(container,dates,values);
+}
+
+function renderWeeklySpendChart(){
+    const container = document.getElementById("weeklySpendChart");
+    if(!container) return;
+    const dates = getLastSevenDates();
+    const active = activeTransactions();
+    const values = dates.map(date => active.filter(t => t.type==="SPEND" && t.date===date).reduce((s,t)=>s+number(t.amount),0));
+    renderBars(container,dates,values);
+}
+
+function renderBars(container,dates,values){
+    const max = Math.max(1,...values);
+    container.innerHTML = dates.map((date,i) => {
+        const value = number(values[i]);
+        const height = value / max * 180;
+        const d = new Date(date + "T00:00:00");
+        const label = d.toLocaleDateString("en-IN",{weekday:"short"});
+        return `<div class="bar-wrap">
+            <div class="bar-value">${value > 0 ? money(value) : ""}</div>
+            <div class="bar" style="height:${Math.max(2,height)}px"></div>
+            <div class="bar-label">${label}</div>
+        </div>`;
+    }).join("");
+}
+
+function renderCategoryReport(){
+    const container = document.getElementById("categoryReport");
+    if(!container) return;
+    const balances = calculateBalances().categories;
+    container.innerHTML = activeCategories().map(c => `
+        <div class="person-row">
+            <span>${escapeHtml(c.name)}</span>
+            <strong>${money(number(balances[c.id]))}</strong>
+        </div>
+    `).join("");
+}
+
+function renderLocationReport(){
+    const container = document.getElementById("locationReport");
+    if(!container) return;
+    const balances = calculateBalances();
+    container.innerHTML = `
+        <div class="person-row"><span>Cash</span><strong>${money(balances.cash)}</strong></div>
+        <div class="person-row"><span>Online</span><strong>${money(balances.online)}</strong></div>
+        <div class="person-row"><span>Total</span><strong>${money(balances.cash + balances.online)}</strong></div>
+    `;
+}
+
+/* ---------------------------
+   LENDING PAGE
+---------------------------- */
+
+function updateLendingPage(){
+    const people = calculatePeopleBalances();
+    const entries = Object.entries(people).filter(([p,a]) => a > 0.005);
+    const total = entries.reduce((s,[p,a])=>s+a,0);
+    setText("lendingTotal",money(total));
+    setText("lendingPeopleCount",entries.length);
+    const container = document.getElementById("lendingTable");
+    if(!container) return;
+    if(entries.length===0){ container.innerHTML = `<div class="empty">No outstanding lending.</div>`; return; }
+    container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Person</th><th>Outstanding</th></tr></thead>
+        <tbody>${entries.map(([person,amount])=>`<tr><td>${escapeHtml(person)}</td><td>${money(amount)}</td></tr>`).join("")}</tbody>
+    </table></div>`;
+}
+
+/* ---------------------------
+   FILTER CATEGORIES
+---------------------------- */
+
+function updateFilterCategories(){
+    const select = document.getElementById("filterCategory");
+    if(!select) return;
+    const current = select.value;
+    select.innerHTML = `<option value="">All Categories</option>` + data.settings.categories.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+    if(data.settings.categories.some(c => c.id === current)) select.value = current;
+}
+
+/* ---------------------------
+   MANAGE CATEGORIES
+---------------------------- */
+
+function renderCategorySettings(){
+    const container = document.getElementById("categorySettings");
+    if(!container) return;
+    container.innerHTML = data.settings.categories.map(c => `
+        <div class="settings-row" data-category-row="${escapeHtml(c.id)}">
+            <input class="category-name-input" data-id="${escapeHtml(c.id)}" value="${escapeHtml(c.name)}" placeholder="Category name">
+            <input class="category-percent-input" data-id="${escapeHtml(c.id)}" type="number" min="0" max="100" step="0.01" value="${number(c.percentage)}">
+            <label class="toggle">
+                <input type="checkbox" class="category-active-input" data-id="${escapeHtml(c.id)}" ${c.active ? "checked" : ""}>
+                Active
+            </label>
+            <button class="small-btn" onclick="openTransferModal('${escapeHtml(c.id)}')" title="Transfer money to another category">Transfer</button>
+            <button class="small-btn danger" onclick="removeCategory('${escapeHtml(c.id)}')">Remove</button>
+        </div>
+    `).join("");
+    updateAllocationTotalPreview();
+}
+
+function updateAllocationTotalPreview(){
+    const inputs = document.querySelectorAll(".category-percent-input");
+    let total=0;
+    let invalidPercentage = false;
+    inputs.forEach(input => {
+        const value = number(input.value);
+        if(value < 0 || value > 100) invalidPercentage = true;
+    });
+    if(invalidPercentage){
+        const el = document.getElementById("allocationTotal");
+        if(el){ el.textContent = "Invalid %"; el.className = "total-percent percent-bad"; }
+        return;
+    }
+    inputs.forEach(input => { total += number(input.value); });
+    const el = document.getElementById("allocationTotal");
+    if(el){
+        el.textContent = total.toFixed(2) + "%";
+        el.className = "total-percent " + (Math.abs(total-100)<0.001 ? "percent-good" : "percent-bad");
+    }
+}
+
+function addCategoryRow(){
+    const id = "cat_" + createId();
+    data.settings.categories.push({id:id, name:"New Category", percentage:0, active:true});
+    renderCategorySettings();
+}
+
+function removeCategory(id){
+    const category = data.settings.categories.find(c => c.id === id);
+    if(!category) return;
+    const balances = calculateBalances();
+    const currentBalance = number(balances.categories[id]);
+    if(Math.abs(currentBalance) > 0.005){
+        alert("This category has a non-zero balance. It cannot be removed safely. Use Transfer first.");
+        return;
+    }
+    if(data.settings.categories.length <= 1){ alert("At least one category is required."); return; }
+    data.settings.categories = data.settings.categories.filter(c => c.id !== id);
+    renderCategorySettings();
+}
+
+function saveCategorySettings(){
+    const names = document.querySelectorAll(".category-name-input");
+    const percentages = document.querySelectorAll(".category-percent-input");
+    const activeInputs = document.querySelectorAll(".category-active-input");
+
+    const preview = data.settings.categories.map(c => {
+        const nameInput = [...names].find(x => x.dataset.id === c.id);
+        const percentInput = [...percentages].find(x => x.dataset.id === c.id);
+        const activeInput = [...activeInputs].find(x => x.dataset.id === c.id);
+        const newName = nameInput ? nameInput.value.trim() : c.name;
+        const newPercent = percentInput ? number(percentInput.value) : number(c.percentage);
+        const newActive = activeInput ? activeInput.checked : c.active;
+        return {id:c.id, old:c, name:newName || c.name, percentage:newPercent, active:newActive};
+    });
+
+    for(const r of preview){
+        if(r.percentage < 0 || r.percentage > 100){
+            document.getElementById("manageMessage").innerHTML = `<div class="notice error">Percentage for ${escapeHtml(r.name)} must be between 0 and 100.</div>`;
+            return;
+        }
+    }
+
+    const balances = calculateBalances();
+    for(const r of preview){
+        if(r.old && r.old.active && !r.active && Math.abs(number(balances.categories[r.id])) > 0.005){
+            showNotification("Cannot deactivate " + categoryName(r.id) + ": it still has a balance of " + money(balances.categories[r.id]) + ".");
+            return;
+        }
+    }
+
+    const activeCount = preview.filter(r => r.active).length;
+    if(activeCount === 0){
+        document.getElementById("manageMessage").innerHTML = `<div class="notice error">At least one active category is required.</div>`;
+        return;
+    }
+
+    const activeTotal = preview.filter(r => r.active).reduce((s,r)=>s+number(r.percentage),0);
+    if(Math.abs(activeTotal - 100) > 0.001){
+        document.getElementById("manageMessage").innerHTML = `<div class="notice error">Active categories must total exactly 100%.</div>`;
+        return;
+    }
+
+    data.settings.categories.forEach(c => {
+        const r = preview.find(x => x.id === c.id);
+        if(!r) return;
+        c.name = r.name;
+        c.percentage = r.percentage;
+        c.active = r.active;
+    });
+
+    saveData();
+    document.getElementById("manageMessage").innerHTML = `<div class="notice success">Category settings saved.</div>`;
+    updateUI();
+}
+
+/* ---------------------------
+   STARTING BALANCES
+---------------------------- */
+
+function updateManageStartingBalances(){
+    const cash = document.getElementById("startingCash");
+    const online = document.getElementById("startingOnline");
+    if(cash) cash.value = number(data.settings.startingBalances.cash);
+    if(online) online.value = number(data.settings.startingBalances.online);
+}
+
+function saveStartingBalances(){
+    const cash = number(document.getElementById("startingCash").value);
+    const online = number(document.getElementById("startingOnline").value);
+    if(cash < 0 || online < 0){ alert("Starting balances cannot be negative."); return; }
+    data.settings.startingBalances = {cash:cash, online:online};
+    saveData();
+    updateUI();
+    alert("Starting balances saved.");
+}
+
+/* ---------------------------
+   DARK MODE
+---------------------------- */
+
+function toggleDarkMode(){
+    data.settings.darkMode = !data.settings.darkMode;
+    saveData();
+    document.body.classList.toggle("dark", data.settings.darkMode);
+}
+
+/* ---------------------------
+   MODALS
+---------------------------- */
+
+function openModal(id){
+    const modal = document.getElementById(id);
+    if(modal) modal.classList.add("open");
+}
+
+function closeModal(id){
+    const modal = document.getElementById(id);
+    if(modal) modal.classList.remove("open");
+}
+
+function openResetModal(){ openModal("resetModal"); }
+
+/* ---------------------------
+   RESET ALL DATA
+---------------------------- */
+
+function resetAllData(){
+    const categories = JSON.parse(JSON.stringify(data.settings.categories));
+    const darkMode = data.settings.darkMode;
+    data = {
+        version:1,
+        settings:{categories:categories, startingBalances:{cash:0,online:0}, darkMode:darkMode},
+        transactions:[]
+    };
+    saveData();
+    closeModal("resetModal");
+    spendLocationRows=[];
+    spendCategoryRows=[];
+    updateUI();
+    alert("Tracker has been reset. You can start fresh.");
+}
+
+/* ---------------------------
+   JSON EXPORT / IMPORT
+---------------------------- */
+
+function exportJSON(){
+    const json = JSON.stringify(data,null,2);
+    const blob = new Blob([json],{type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url;
+    a.download = "money-tracker-backup-" + today() + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importJSON(){
+    const input = document.getElementById("importFile");
+    const file = input.files[0];
+    if(!file){ alert("Select a JSON backup file first."); return; }
+    const reader = new FileReader();
+    reader.onload = function(){
+        try{
+            const imported = JSON.parse(reader.result);
+            if(!imported || typeof imported !== "object" || !Array.isArray(imported.transactions) || !imported.settings || typeof imported.settings !== "object"){
+                throw new Error("Invalid backup structure.");
+            }
+            const tempData = JSON.parse(JSON.stringify(imported));
+            if(!Array.isArray(tempData.settings.categories)) tempData.settings.categories = [];
+            tempData.settings.categories = tempData.settings.categories
+                .filter(c => c && c.id)
+                .map(c => ({id:String(c.id), name:String(c.name || c.id), percentage:number(c.percentage), active:c.active !== false}));
+            if(tempData.settings.categories.length === 0){
+                tempData.settings.categories = JSON.parse(JSON.stringify(defaultCategories));
+            }
+            if(!tempData.settings.startingBalances || typeof tempData.settings.startingBalances !== "object"){
+                tempData.settings.startingBalances = {cash:0, online:0};
+            } else {
+                tempData.settings.startingBalances = {
+                    cash:number(tempData.settings.startingBalances.cash),
+                    online:number(tempData.settings.startingBalances.online)
+                };
+            }
+            const allowedTypes = ["ADD","SPEND","LEND","REPAY","REVERSAL","TRANSFER"];
+            for(const transaction of tempData.transactions){
+                if(!transaction || typeof transaction !== "object" || !allowedTypes.includes(transaction.type)){
+                    throw new Error("Backup contains an invalid transaction.");
+                }
+            }
+            migrateTransactions(tempData.transactions);
+            if(!confirm("Importing will replace current tracker data. Continue?")) return;
+            data = tempData;
+            saveData();
+            updateUI();
+            try{ runIntegrityCheck(); }catch(e){}
+            alert("Backup imported successfully.");
+        }catch(error){
+            alert("Import failed: " + error.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+/* ---------------------------
+   CSV EXPORT
+---------------------------- */
+
+function exportCSV(){
+    const rows = [["Date","Time","Type","Amount","Person","Note","Reversal Of"]];
+    [...data.transactions].sort((a,b)=>a.timestamp-b.timestamp).forEach(t => {
+        rows.push([t.date || "", t.time || "", t.type || "", t.amount ?? "", t.person || "", t.note || "", t.reversalOf || ""]);
+    });
+    const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url;
+    a.download = "money-tracker-" + today() + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/* ---------------------------
+   INTEGRITY CHECK
+---------------------------- */
+
+function runIntegrityCheck(){
+    const errors = [];
+    const warnings = [];
+    const allowed = ["ADD","SPEND","LEND","REPAY","REVERSAL","TRANSFER"];
+    const ids = new Set();
+    const catIds = new Set(data.settings.categories.map(c => c.id));
+
+    const activeTotal = activeCategories().reduce((s,c) => s + number(c.percentage),0);
+    if(Math.abs(activeTotal - 100) > 0.001) errors.push("Active category allocation is not 100%.");
+
+    data.transactions.forEach(t => {
+        if(!t || typeof t !== "object"){ errors.push("Malformed transaction entry."); return; }
+        const label = t.id || "(no id)";
+        if(!t.id) errors.push("Transaction without ID.");
+        else if(ids.has(t.id)) errors.push("Duplicate transaction ID: " + t.id);
+        else ids.add(t.id);
+
+        if(!allowed.includes(t.type)){ errors.push("Invalid transaction type: " + label); return; }
+        if(!t.categoryLegs) errors.push("Transaction without category legs: " + label);
+        if(!t.locationLegs) errors.push("Transaction without location legs: " + label);
+
+        Object.keys(t.categoryLegs || {}).forEach(id => {
+            if(!catIds.has(id)) warnings.push("Transaction " + label + " references a removed category: " + id);
+        });
+
+        const v = validateTransactionLegs(t);
+        if(!v.valid && v.message !== "Transaction contains an invalid category."){
+            errors.push("Validator failed for " + label + ": " + v.message);
+        }
+
+        if(t.reversalOf && !data.transactions.some(x => x.id === t.reversalOf)){
+            errors.push("Reversal points to missing transaction: " + label);
+        }
+        if(t.reversedBy && !data.transactions.some(x => x.id === t.reversedBy)){
+            errors.push("Transaction points to missing reversal: " + label);
+        }
+    });
+
+    const balances = calculateBalances();
+    const people = calculatePeopleBalances();
+    const peopleTotal = Object.values(people).reduce((s,a) => s + a,0);
+
+    if(Math.abs(balances.lent - peopleTotal) > 0.005){
+        errors.push("Total lent (" + money(balances.lent) + ") does not match sum of people balances (" + money(peopleTotal) + ").");
+    }
+
+    Object.entries(people).forEach(([person,amount]) => {
+        if(amount < -0.005) errors.push("Negative outstanding balance for " + person + ": " + money(amount));
+    });
+
+    const categoryTotal = Object.values(balances.categories).reduce((s,a) => s + a,0);
+    const unallocated = balances.cash + balances.online - categoryTotal;
+    if(unallocated < -0.005) errors.push("Category balances exceed Cash + Online by " + money(-unallocated) + ".");
+
+    const container = document.getElementById("integrityResult");
+    if(!container) return;
+
+    container.innerHTML =
+        (errors.length === 0
+            ? `<div class="notice success">✓ Integrity check passed. No structural problems found.</div>`
+            : `<div class="notice error"><strong>Problems found:</strong><ul>${errors.map(e => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>`)
+        + (warnings.length
+            ? `<div class="notice info"><strong>Warnings:</strong><ul>${warnings.map(e => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>`
+            : "")
+        + `<div class="notice info">Unallocated money (Cash + Online − category balances): <strong>${money(unallocated)}</strong></div>`;
+}
+
+/* ---------------------------
+   INITIAL FORM DATES
+---------------------------- */
+
+function initializeDates(){
+    const addDate = document.getElementById("addDate");
+    const spendDate = document.getElementById("spendDate");
+    if(addDate) addDate.value = today();
+    if(spendDate) spendDate.value = today();
+}
+
+/* ---------------------------
+   CLOSE MODALS BY BACKDROP
+---------------------------- */
+
+document.addEventListener("click",function(e){
+    if(e.target.classList.contains("modal")) e.target.classList.remove("open");
+});
+
+/* ---------------------------
+   NOTIFICATION
+---------------------------- */
+
+function showNotification(message){
+    const notification = document.getElementById("appNotification");
+    const messageBox = document.getElementById("appNotificationMessage");
+    if(!notification || !messageBox){ console.error("Notification box not found."); return; }
+    messageBox.textContent = message;
+    notification.classList.add("show");
+    window.scrollTo({top:0, behavior:"smooth"});
+    clearTimeout(window.notificationTimer);
+    window.notificationTimer = setTimeout(() => { hideNotification(); }, 4000);
+}
+
+function hideNotification(){
+    const notification = document.getElementById("appNotification");
+    if(notification) notification.classList.remove("show");
+}
+
+/* ---------------------------
+   INITIALIZATION
+---------------------------- */
+
+initializeDates();
+updateUI();
+
+/* =========================================================
+   PART C2 — CLOUD SYNC + AUTHENTICATION
+   ========================================================= */
+
+let supabaseClient = null;
+
 try {
-    if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+    if (window.SUPABASE_URL && window.SUPABASE_URL !== "PASTE_YOUR_PROJECT_URL_HERE" &&
+        window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== "PASTE_YOUR_PUBLISHABLE_KEY_HERE") {
         supabaseClient = window.supabase.createClient(
             window.SUPABASE_URL,
             window.SUPABASE_ANON_KEY,
-            {
-                auth: {
-                    persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: false
-                }
-            }
+            {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:false}}
         );
-        console.log("✅ Supabase initialized");
+        console.log("✅ Supabase client initialized");
+    } else {
+        console.warn("⚠️ Supabase keys not configured. Cloud sync disabled.");
     }
 } catch (err) {
     console.error("❌ Supabase init failed:", err);
 }
 
-/* ═══ UTILITIES ═══ */
-function $(id) { return document.getElementById(id); }
+let currentUser = null;
+let cloudReady = false;
+let isSavingToCloud = false;
+let pendingCloudSave = false;
+let cloudSaveTimer = null;
+let cloudSaveFailCount = 0;
+let migrationPrompted = false;
+let isLoadingCloudData = false;
+const SYNC_DEBOUNCE_MS = 1500;
 
-function setAuthMessage(msg, type) {
-    const el = $("authMessage");
-    if (!el) return;
-    if (!msg) { el.className = "auth-message"; el.textContent = ""; return; }
+function setSyncStatus(status, text){
+    const el = document.getElementById("syncIndicator");
+    const txt = document.getElementById("syncText");
+    if(!el || !txt) return;
+    el.classList.remove("synced","saving","offline");
+    el.classList.add(status);
+    if(text) txt.textContent = text;
+    else if(status === "synced") txt.textContent = "Synced";
+    else if(status === "saving") txt.textContent = "Saving…";
+    else if(status === "offline") txt.textContent = "Offline";
+}
+
+function updateUserUI(user){
+    const emailEl = document.getElementById("userEmail");
+    const avatarEl = document.getElementById("userAvatar");
+    if(!emailEl || !avatarEl) return;
+    if(user){
+        const email = user.email || "unknown";
+        emailEl.textContent = email;
+        emailEl.title = email;
+        avatarEl.textContent = email.charAt(0).toUpperCase();
+    } else {
+        emailEl.textContent = "Not logged in";
+        avatarEl.textContent = "?";
+    }
+}
+
+function showAuthScreen(){ const el = document.getElementById("authScreen"); if(el) el.classList.remove("hidden"); }
+function hideAuthScreen(){ const el = document.getElementById("authScreen"); if(el) el.classList.add("hidden"); }
+
+function setAuthMessage(msg, type){
+    const el = document.getElementById("authMessage");
+    if(!el) return;
+    if(!msg){ el.className = "auth-message"; el.textContent = ""; return; }
     el.className = "auth-message " + type;
     el.textContent = msg;
 }
 
-function formatMoney(n) {
-    return "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
-}
-
-function formatDate(iso) {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    return d.toLocaleString("en-IN", {
-        day: "2-digit", month: "short", year: "numeric",
-        hour: "2-digit", minute: "2-digit"
-    });
-}
-
-function escapeHtml(s) {
-    return String(s ?? "")
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-/* ═══ LOGIN ═══ */
-async function handleLogin(e) {
-    e.preventDefault();
-    if (!supabaseClient) { setAuthMessage("Cloud not configured", "error"); return; }
-
-    const email = $("loginEmail").value.trim();
-    const password = $("loginPassword").value;
-    const btn = $("loginBtn");
-
-    if (!email || !password) { setAuthMessage("Enter email and password", "error"); return; }
-
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-        setAuthMessage("Access Denied — not admin", "error");
-        return;
+function switchAuthTab(tab){
+    const loginTab = document.getElementById("loginTabBtn");
+    const signupTab = document.getElementById("signupTabBtn");
+    const loginForm = document.getElementById("loginForm");
+    const signupForm = document.getElementById("signupForm");
+    const title = document.getElementById("authTitle");
+    const subtitle = document.getElementById("authSubtitle");
+    setAuthMessage("", "");
+    if(tab === "login"){
+        if(loginTab) loginTab.classList.add("active");
+        if(signupTab) signupTab.classList.remove("active");
+        if(loginForm) loginForm.classList.add("active");
+        if(signupForm) signupForm.classList.remove("active");
+        if(title) title.textContent = "Welcome Back";
+        if(subtitle) subtitle.textContent = "Sign in to sync your data";
+    } else {
+        if(signupTab) signupTab.classList.add("active");
+        if(loginTab) loginTab.classList.remove("active");
+        if(signupForm) signupForm.classList.add("active");
+        if(loginForm) loginForm.classList.remove("active");
+        if(title) title.textContent = "Create Account";
+        if(subtitle) subtitle.textContent = "Sign up to sync across devices";
     }
+}
 
+async function handleLogin(event){
+    event.preventDefault();
+    if(!supabaseClient){ setAuthMessage("Cloud not configured","error"); return; }
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const btn = document.getElementById("loginSubmitBtn");
+    if(!email || !password){ setAuthMessage("Enter email and password","error"); return; }
     btn.disabled = true;
     btn.textContent = "Logging in…";
     setAuthMessage("", "");
-
-    try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        console.log("✅ Admin login:", data.user.email);
-        setAuthMessage("Login successful!", "success");
-    } catch (err) {
+    try{
+        const { data, error } = await supabaseClient.auth.signInWithPassword({email:email, password:password});
+        if(error) throw error;
+        console.log("✅ Login success:", data.user.email);
+        setAuthMessage("Login successful!","success");
+    }catch(err){
         console.error("Login failed:", err);
-        setAuthMessage(err.message || "Login failed", "error");
+        setAuthMessage(err.message || "Login failed","error");
         btn.disabled = false;
         btn.textContent = "Log In";
     }
 }
 
-async function handleLogout() {
-    if (!supabaseClient) return;
-    try {
+async function handleSignup(event){
+    event.preventDefault();
+    if(!supabaseClient){ setAuthMessage("Cloud not configured","error"); return; }
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+    const password2 = document.getElementById("signupPassword2").value;
+    const btn = document.getElementById("signupSubmitBtn");
+    if(!email || !password){ setAuthMessage("Enter email and password","error"); return; }
+    if(password.length < 6){ setAuthMessage("Password must be at least 6 characters","error"); return; }
+    if(password !== password2){ setAuthMessage("Passwords do not match","error"); return; }
+    btn.disabled = true;
+    btn.textContent = "Creating account…";
+    setAuthMessage("", "");
+    try{
+        const { data, error } = await supabaseClient.auth.signUp({email:email, password:password});
+        if(error) throw error;
+        console.log("✅ Signup success:", data.user?.email);
+        if(data.session){
+            setAuthMessage("Account created!","success");
+        } else {
+            setAuthMessage("Account created! Check email, then log in.","success");
+            btn.disabled = false;
+            btn.textContent = "Create Account";
+            setTimeout(() => switchAuthTab("login"), 2000);
+        }
+    }catch(err){
+        console.error("Signup failed:", err);
+        setAuthMessage(err.message || "Signup failed","error");
+        btn.disabled = false;
+        btn.textContent = "Create Account";
+    }
+}
+
+async function handleLogout(){
+    if(!supabaseClient || !currentUser) return;
+    const ok = confirm("Log out of " + (currentUser.email || "") + "?\n\nYour data is saved to cloud.");
+    if(!ok) return;
+    try{
         await supabaseClient.auth.signOut();
+        console.log("✅ Logged out");
         location.reload();
-    } catch (err) {
+    }catch(err){
         console.error("Logout failed:", err);
+        alert("Logout failed: " + err.message);
     }
 }
 
-/* ═══ LOAD ADMIN DATA ═══ */
-async function loadAdminData() {
-    if (!supabaseClient || !currentUser) return;
-
-    // 1. Fetch all login history
-    try {
-        const { data: logins, error } = await supabaseClient
-            .from("login_history")
-            .select("*")
-            .order("login_time", { ascending: false })
-            .limit(500);
-
-        if (error) throw error;
-        allLogins = logins || [];
-        populateEmailFilter();
-        renderLoginHistory();
-    } catch (err) {
-        console.error("Login history fetch failed:", err);
-        $("loginHistoryContainer").innerHTML = `<div class="empty">Failed to load: ${escapeHtml(err.message)}</div>`;
-    }
-
-    // 2. Fetch all tracker data
-    try {
-        const { data: trackers, error } = await supabaseClient
-            .from("money_tracker_data")
-            .select("user_id, data, updated_at");
-
-        if (error) throw error;
-        allTrackers = trackers || [];
-        processTrackerData();
-    } catch (err) {
-        console.error("Tracker data fetch failed:", err);
-        $("usersSummaryContainer").innerHTML = `<div class="empty">Failed to load: ${escapeHtml(err.message)}</div>`;
-    }
-}
-
-/* ═══ PROCESS DATA ═══ */
-function processTrackerData() {
-    const trackers = allTrackers;
-    const totalUsers = trackers.length;
-    let totalTransactions = 0;
-    let totalVolume = 0;
-
-    const users = trackers.map(t => {
-        const txns = (t.data && t.data.transactions) || [];
-        const txnCount = txns.length;
-
-        const addVolume = txns
-            .filter(tx => tx.type === "ADD")
-            .reduce((s, tx) => s + Number(tx.amount || 0), 0);
-
-        totalTransactions += txnCount;
-        totalVolume += addVolume;
-
-        return {
-            user_id: t.user_id,
-            txnCount: txnCount,
-            volume: addVolume,
-            updated_at: t.updated_at
-        };
-    });
-
-    $("statUsers").textContent = totalUsers;
-    $("statTransactions").textContent = totalTransactions;
-    $("statVolume").textContent = formatMoney(totalVolume);
-
-    renderUsersSummary(users);
-    renderAnalytics();
-}
-
-/* ═══ LOGIN HISTORY ═══ */
-function populateEmailFilter() {
-    const select = $("filterEmail");
-    if (!select) return;
-    const emails = [...new Set(allLogins.map(l => l.email).filter(Boolean))];
-    select.innerHTML = `<option value="">All Emails</option>` +
-        emails.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join("");
-}
-
-function applyLoginFilters() {
-    renderLoginHistory();
-}
-
-function clearLoginFilters() {
-    $("filterDateFrom").value = "";
-    $("filterDateTo").value = "";
-    $("filterDevice").value = "";
-    $("filterEmail").value = "";
-    renderLoginHistory();
-}
-
-function getFilteredLogins() {
-    let list = [...allLogins];
-
-    const from = $("filterDateFrom")?.value;
-    const to = $("filterDateTo")?.value;
-    const device = $("filterDevice")?.value;
-    const email = $("filterEmail")?.value;
-
-    if (from) {
-        const fromDate = new Date(from + "T00:00:00").getTime();
-        list = list.filter(l => new Date(l.login_time).getTime() >= fromDate);
-    }
-    if (to) {
-        const toDate = new Date(to + "T23:59:59").getTime();
-        list = list.filter(l => new Date(l.login_time).getTime() <= toDate);
-    }
-    if (device) list = list.filter(l => l.device_type === device);
-    if (email) list = list.filter(l => l.email === email);
-
-    return list;
-}
-
-function renderLoginHistory() {
-    const container = $("loginHistoryContainer");
-    const list = getFilteredLogins().slice(0, 20);
-
-    // Count today
-    const today = new Date().toISOString().slice(0, 10);
-    const todayCount = allLogins.filter(l => l.login_time && l.login_time.slice(0, 10) === today).length;
-    $("statToday").textContent = todayCount;
-
-    if (list.length === 0) {
-        container.innerHTML = `<div class="empty">No login records match your filters.</div>`;
-        return;
-    }
-
-    const rows = list.map(l => {
-        const dtClass = (l.device_type || "").toLowerCase();
-        return `
-            <tr>
-                <td>${escapeHtml(formatDate(l.login_time))}</td>
-                <td>${escapeHtml(l.email || "—")}</td>
-                <td><span class="badge ${dtClass}">${escapeHtml(l.device_type || "—")}</span></td>
-                <td>${escapeHtml(l.browser || "—")}</td>
-                <td>${escapeHtml(l.os || "—")}</td>
-            </tr>
-        `;
-    }).join("");
-
-    container.innerHTML = `
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Login Time</th>
-                        <th>Email</th>
-                        <th>Device</th>
-                        <th>Browser</th>
-                        <th>OS</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>
-    `;
-}
-
-/* ═══ USERS SUMMARY ═══ */
-function renderUsersSummary(users) {
-    const container = $("usersSummaryContainer");
-
-    if (users.length === 0) {
-        container.innerHTML = `<div class="empty">No users yet.</div>`;
-        return;
-    }
-
-    const rows = users.map(u => `
-        <tr>
-            <td style="font-family:monospace;font-size:11px;">${escapeHtml(u.user_id)}</td>
-            <td>${u.txnCount}</td>
-            <td>${formatMoney(u.volume)}</td>
-            <td>${escapeHtml(formatDate(u.updated_at))}</td>
-            <td><button class="view-btn" onclick="showUserDetail('${u.user_id}')">View Details</button></td>
-        </tr>
-    `).join("");
-
-    container.innerHTML = `
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Transactions</th>
-                        <th>Volume Added</th>
-                        <th>Last Update</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>
-    `;
-}
-
-/* ═══ ANALYTICS ═══ */
-function renderAnalytics() {
-    renderWeekChart();
-    renderCategoryChart();
-}
-
-function renderWeekChart() {
-    const container = $("weekChart");
-    if (!container) return;
-
-    // Last 7 days
-    const days = [];
-    const counts = [];
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0, 10);
-        days.push(d.toLocaleDateString("en-IN", { weekday: "short" }));
-        let count = 0;
-        allTrackers.forEach(t => {
-            const txns = (t.data && t.data.transactions) || [];
-            txns.forEach(tx => {
-                if (tx.date === key) count++;
-            });
-        });
-        counts.push(count);
-    }
-
-    const max = Math.max(1, ...counts);
-
-    container.innerHTML = days.map((day, i) => {
-        const h = (counts[i] / max) * 160;
-        return `
-            <div class="bar-item">
-                <div class="bar-value">${counts[i] || ""}</div>
-                <div class="bar" style="height:${Math.max(2, h)}px"></div>
-                <div class="bar-label">${day}</div>
-            </div>
-        `;
-    }).join("");
-}
-
-function renderCategoryChart() {
-    const container = $("categoryChart");
-    if (!container) return;
-
-    // Aggregate all category legs across all users
-    const catTotals = {};
-    const catNames = {};
-
-    allTrackers.forEach(t => {
-        const data = t.data || {};
-        (data.settings?.categories || []).forEach(c => {
-            catNames[c.id] = c.name;
-        });
-        (data.transactions || []).forEach(tx => {
-            Object.entries(tx.categoryLegs || {}).forEach(([id, val]) => {
-                catTotals[id] = (catTotals[id] || 0) + Math.abs(Number(val));
-            });
-        });
-    });
-
-    const entries = Object.entries(catTotals)
-        .filter(([k, v]) => v > 0)
-        .sort((a, b) => b[1] - a[1]);
-
-    if (entries.length === 0) {
-        container.innerHTML = `<div class="empty">No category data yet.</div>`;
-        return;
-    }
-
-    const colors = ["#3b82f6", "#a78bfa", "#4ade80", "#fb923c", "#f87171", "#22d3ee", "#f472b6"];
-
-    const legend = entries.map(([id, val], i) => `
-        <div class="legend-item">
-            <div class="legend-color" style="background:${colors[i % colors.length]}"></div>
-            <div class="legend-name">${escapeHtml(catNames[id] || id)}</div>
-            <div class="legend-value">${formatMoney(val)}</div>
-        </div>
-    `).join("");
-
-    container.innerHTML = `<div class="pie-legend">${legend}</div>`;
-}
-
-/* ═══ USER DETAIL ═══ */
-async function showUserDetail(userId) {
-    const modal = $("userDetailModal");
-    const title = $("userDetailTitle");
-    const content = $("userDetailContent");
-
-    if (!modal || !content) return;
-
-    title.textContent = "User Details";
-    content.innerHTML = `<div class="loading">Loading user data…</div>`;
-    modal.classList.add("open");
-
-    try {
+async function loadCloudData(){
+    if(!supabaseClient || !currentUser) return null;
+    try{
         const { data: rows, error } = await supabaseClient
             .from("money_tracker_data")
-            .select("*")
-            .eq("user_id", userId)
+            .select("data, updated_at")
+            .eq("user_id", currentUser.id)
             .maybeSingle();
+        if(error) throw error;
+        if(!rows || !rows.data){ console.log("📭 No cloud data yet"); return null; }
+        console.log("☁️ Cloud data loaded");
+        return rows.data;
+    }catch(err){
+        console.error("Load cloud failed:", err);
+        setSyncStatus("offline", "Load failed");
+        return null;
+    }
+}
 
-        if (error) throw error;
+async function saveCloudData(immediate = false){
+    if(!supabaseClient || !currentUser || !cloudReady) return false;
+    if(isLoadingCloudData) return false;
+    if(!navigator.onLine){ pendingCloudSave = true; setSyncStatus("offline","Offline"); return false; }
+    if(!immediate){
+        if(cloudSaveTimer) clearTimeout(cloudSaveTimer);
+        setSyncStatus("saving","Saving…");
+        cloudSaveTimer = setTimeout(() => { saveCloudDataNow(); }, SYNC_DEBOUNCE_MS);
+        return true;
+    }
+    return saveCloudDataNow();
+}
 
-        if (!rows || !rows.data) {
-            content.innerHTML = `<div class="empty">No data found.</div>`;
-            return;
+async function saveCloudDataNow(){
+    if(!supabaseClient || !currentUser || !cloudReady) return false;
+    if(isLoadingCloudData) return false;
+    if(isSavingToCloud){ pendingCloudSave = true; return false; }
+    isSavingToCloud = true;
+    setSyncStatus("saving","Saving…");
+    try{
+        const { error } = await supabaseClient
+            .from("money_tracker_data")
+            .upsert({user_id:currentUser.id, data:data, updated_at:new Date().toISOString()}, {onConflict:"user_id"});
+        if(error) throw error;
+        cloudSaveFailCount = 0;
+        isSavingToCloud = false;
+        setSyncStatus("synced","Synced");
+        console.log("☁️ Saved to cloud");
+        if(pendingCloudSave){ pendingCloudSave = false; saveCloudData(); }
+        return true;
+    }catch(err){
+        console.error("Cloud save failed:", err);
+        cloudSaveFailCount++;
+        isSavingToCloud = false;
+        if(cloudSaveFailCount < 5){
+            setSyncStatus("saving","Retrying…");
+            setTimeout(() => saveCloudData(true), 3000 * cloudSaveFailCount);
+        } else {
+            setSyncStatus("offline","Sync failed");
         }
+        return false;
+    }
+}
 
-        const { data: loginRows } = await supabaseClient
+window.__cloudSaveHook = function(){
+    if(isLoadingCloudData) return;
+    if(!currentUser || !cloudReady) return;
+    saveCloudData(false);
+};
+
+function detectDeviceInfo(){
+    const ua = navigator.userAgent;
+    let deviceType = "Desktop", browser = "Unknown", os = "Unknown";
+    if(/Mobi|Android/i.test(ua) && !/Tablet|iPad/i.test(ua)) deviceType = "Mobile";
+    else if(/Tablet|iPad/i.test(ua)) deviceType = "Tablet";
+    if(/Edg\//i.test(ua)) browser = "Edge";
+    else if(/OPR|Opera/i.test(ua)) browser = "Opera";
+    else if(/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "Chrome";
+    else if(/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
+    else if(/Firefox/i.test(ua)) browser = "Firefox";
+    if(/Windows/i.test(ua)) os = "Windows";
+    else if(/Android/i.test(ua)) os = "Android";
+    else if(/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+    else if(/Mac/i.test(ua)) os = "macOS";
+    else if(/Linux/i.test(ua)) os = "Linux";
+    return {deviceType, browser, os, userAgent: ua};
+}
+
+async function recordLoginHistory(user){
+    if(!supabaseClient || !user) return;
+    try{
+        const info = detectDeviceInfo();
+        const { error } = await supabaseClient
             .from("login_history")
-            .select("email")
-            .eq("user_id", userId)
-            .limit(1)
-            .maybeSingle();
-
-        const email = loginRows?.email || "Unknown";
-        renderUserDetail(userId, email, rows.data);
-    } catch (err) {
-        console.error("Failed to load user detail:", err);
-        content.innerHTML = `<div class="empty">Failed: ${escapeHtml(err.message)}</div>`;
+            .insert({
+                user_id: user.id,
+                email: user.email,
+                user_agent: info.userAgent,
+                device_type: info.deviceType,
+                browser: info.browser,
+                os: info.os
+            });
+        if(error) throw error;
+        console.log("📝 Login history recorded:", info.deviceType, info.browser, info.os);
+    }catch(err){
+        console.warn("Login history record failed:", err.message);
     }
 }
 
-function renderUserDetail(userId, email, data) {
-    const title = $("userDetailTitle");
-    const content = $("userDetailContent");
-    title.textContent = "User — " + email;
+function checkLocalStorageForMigration(){
+    try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return null;
+        const parsed = JSON.parse(raw);
+        if(!parsed || !Array.isArray(parsed.transactions)) return null;
+        if(parsed.transactions.length === 0) return null;
+        return parsed;
+    }catch(e){ return null; }
+}
 
-    const balances = calculateUserBalances(data);
-    const txns = data.transactions || [];
+function showMigrationModal(){ const el = document.getElementById("migrationModal"); if(el) el.classList.add("show"); }
+function hideMigrationModal(){ const el = document.getElementById("migrationModal"); if(el) el.classList.remove("show"); }
 
-    const catSummary = {};
-    txns.forEach(t => {
-        Object.entries(t.categoryLegs || {}).forEach(([id, val]) => {
-            catSummary[id] = (catSummary[id] || 0) + Number(val);
-        });
-    });
-
-    const catNames = {};
-    (data.settings?.categories || []).forEach(c => { catNames[c.id] = c.name; });
-
-    const people = {};
-    txns.forEach(t => {
-        if (t.lentLeg && t.lentLeg.person) {
-            people[t.lentLeg.person] = (people[t.lentLeg.person] || 0) + Number(t.lentLeg.amount);
+async function handleMigrationChoice(choice){
+    hideMigrationModal();
+    const localData = checkLocalStorageForMigration();
+    if(choice === "upload" && localData){
+        console.log("📤 Migrating local data to cloud…");
+        isLoadingCloudData = true;
+        data.settings.categories = localData.settings.categories || [];
+        data.settings.startingBalances = localData.settings.startingBalances || {cash:0, online:0};
+        data.settings.darkMode = localData.settings.darkMode || false;
+        data.transactions = localData.transactions || [];
+        isLoadingCloudData = false;
+        saveData();
+        updateUI();
+        setSyncStatus("saving","Uploading…");
+        await saveCloudData(true);
+        showNotification("Local data uploaded to cloud!");
+    } else {
+        console.log("⏭️ Skipping migration, using cloud data");
+        const cloudData = await loadCloudData();
+        isLoadingCloudData = true;
+        if(cloudData){
+            data.settings.categories = cloudData.settings?.categories || JSON.parse(JSON.stringify(defaultCategories));
+            data.settings.startingBalances = cloudData.settings?.startingBalances || {cash:0, online:0};
+            data.settings.darkMode = cloudData.settings?.darkMode || false;
+            data.transactions = cloudData.transactions || [];
+            data.version = cloudData.version || 1;
+        } else {
+            data = createDefaultData();
         }
-    });
+        isLoadingCloudData = false;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        updateUI();
+    }
+}
 
-    let html = "";
+async function handleSignedIn(user){
+    currentUser = user;
+    recordLoginHistory(user);
+    updateUserUI(user);
+    hideAuthScreen();
+    console.log("👤 Signed in:", user.email);
+    setSyncStatus("saving","Loading…");
 
-    html += `
-        <div class="detail-section">
-            <h4>👤 User Info</h4>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="label">Email</div>
-                    <div class="value" style="font-size:14px;">${escapeHtml(email)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">User ID</div>
-                    <div class="value" style="font-size:11px;word-break:break-all;">${escapeHtml(userId)}</div>
-                </div>
-            </div>
-        </div>
-    `;
+    const cloudData = await loadCloudData();
+    const localData = checkLocalStorageForMigration();
 
-    html += `
-        <div class="detail-section">
-            <h4>💰 Balances</h4>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <div class="label">Total</div>
-                    <div class="value green">${formatMoney(balances.total)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">Cash</div>
-                    <div class="value">${formatMoney(balances.cash)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">Online</div>
-                    <div class="value">${formatMoney(balances.online)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">Lent</div>
-                    <div class="value orange">${formatMoney(balances.lent)}</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const catEntries = Object.entries(catSummary).filter(([k, v]) => Math.abs(v) > 0.005);
-    if (catEntries.length > 0) {
-        html += `
-            <div class="detail-section">
-                <h4>📊 Categories</h4>
-                <div class="detail-grid">
-                    ${catEntries.map(([id, val]) => `
-                        <div class="detail-item">
-                            <div class="label">${escapeHtml(catNames[id] || id)}</div>
-                            <div class="value">${formatMoney(val)}</div>
-                        </div>
-                    `).join("")}
-                </div>
-            </div>
-        `;
+    if(!cloudData && localData && !migrationPrompted){
+        migrationPrompted = true;
+        showMigrationModal();
+        cloudReady = true;
+        return;
     }
 
-    const peopleEntries = Object.entries(people).filter(([k, v]) => Math.abs(v) > 0.005);
-    if (peopleEntries.length > 0) {
-        html += `
-            <div class="detail-section">
-                <h4>🤝 People Who Owe</h4>
-                <div class="detail-grid">
-                    ${peopleEntries.map(([name, val]) => `
-                        <div class="detail-item">
-                            <div class="label">${escapeHtml(name)}</div>
-                            <div class="value">${formatMoney(val)}</div>
-                        </div>
-                    `).join("")}
-                </div>
-            </div>
-        `;
+    isLoadingCloudData = true;
+    if(cloudData){
+        data.settings.categories = cloudData.settings?.categories || JSON.parse(JSON.stringify(defaultCategories));
+        data.settings.startingBalances = cloudData.settings?.startingBalances || {cash:0, online:0};
+        data.settings.darkMode = cloudData.settings?.darkMode || false;
+        data.transactions = cloudData.transactions || [];
+        data.version = cloudData.version || 1;
+        console.log("☁️ Cloud data applied");
+    } else {
+        console.log("📭 New user — starting fresh");
+        const fresh = createDefaultData();
+        data.settings.categories = fresh.settings.categories;
+        data.settings.startingBalances = fresh.settings.startingBalances;
+        data.settings.darkMode = fresh.settings.darkMode;
+        data.transactions = [];
     }
+    isLoadingCloudData = false;
 
-    const recent = [...txns].sort((a, b) => b.timestamp - a.timestamp).slice(0, 20);
-    if (recent.length > 0) {
-        html += `
-            <div class="detail-section">
-                <h4>📝 Recent Transactions (${recent.length} of ${txns.length})</h4>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Person</th>
-                                <th>Amount</th>
-                                <th>Note</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${recent.map(t => {
-                                let cls = "green";
-                                let amt = t.amount;
-                                if (t.type === "SPEND" || t.type === "LEND") {
-                                    cls = "red"; amt = -Math.abs(t.amount);
-                                }
-                                return `
-                                    <tr>
-                                        <td>${escapeHtml(t.date || "—")} ${escapeHtml(t.time || "")}</td>
-                                        <td><span class="badge ${t.type}">${escapeHtml(t.type)}</span></td>
-                                        <td>${escapeHtml(t.person || "—")}</td>
-                                        <td class="${cls}">${formatMoney(amt)}</td>
-                                        <td>${escapeHtml((t.note || "").slice(0, 30))}</td>
-                                    </tr>
-                                `;
-                            }).join("")}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    updateUI();
 
-    content.innerHTML = html;
+    cloudReady = true;
+    setSyncStatus("synced","Synced");
+    showNotification("Signed in as " + (user.email || ""));
 }
 
-function calculateUserBalances(data) {
-    const settings = data.settings || {};
-    const startingBalances = settings.startingBalances || { cash: 0, online: 0 };
-    const txns = data.transactions || [];
-
-    const balances = {
-        cash: Number(startingBalances.cash) || 0,
-        online: Number(startingBalances.online) || 0,
-        lent: 0
-    };
-
-    txns.forEach(t => {
-        if (t.locationLegs) {
-            balances.cash += Number(t.locationLegs.cash) || 0;
-            balances.online += Number(t.locationLegs.online) || 0;
-        }
-        if (t.lentLeg) {
-            balances.lent += Number(t.lentLeg.amount) || 0;
-        }
-    });
-
-    balances.total = balances.cash + balances.online;
-    return balances;
-}
-
-function closeUserDetailModal() {
-    const modal = $("userDetailModal");
-    if (modal) modal.classList.remove("open");
-}
-
-/* ═══ EXPORT ═══ */
-function exportLoginCSV() {
-    const list = getFilteredLogins();
-    if (list.length === 0) { alert("No data to export"); return; }
-
-    const rows = [["Login Time", "Email", "Device", "Browser", "OS"]];
-    list.forEach(l => {
-        rows.push([
-            l.login_time || "",
-            l.email || "",
-            l.device_type || "",
-            l.browser || "",
-            l.os || ""
-        ]);
-    });
-
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    downloadFile(csv, "login-history-" + new Date().toISOString().slice(0, 10) + ".csv", "text/csv");
-}
-
-function exportUsersJSON() {
-    if (allTrackers.length === 0) { alert("No data to export"); return; }
-
-    const users = allTrackers.map(t => {
-        const txns = (t.data && t.data.transactions) || [];
-        return {
-            user_id: t.user_id,
-            transactions_count: txns.length,
-            updated_at: t.updated_at,
-            full_data: t.data
-        };
-    });
-
-    const json = JSON.stringify(users, null, 2);
-    downloadFile(json, "users-data-" + new Date().toISOString().slice(0, 10) + ".json", "application/json");
-}
-
-function downloadFile(content, filename, mime) {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-/* ═══ MODAL BACKDROP ═══ */
-document.addEventListener("click", function(e) {
-    if (e.target.id === "userDetailModal") closeUserDetailModal();
-});
-
-/* ═══ SHOW/HIDE ═══ */
-function showLogin() {
-    $("loginScreen").classList.remove("hidden");
-    $("adminPanel").classList.remove("visible");
-}
-
-function showAdmin(user) {
-    $("loginScreen").classList.add("hidden");
-    $("adminPanel").classList.add("visible");
-    $("adminEmail").textContent = user.email;
-    loadAdminData();
-}
-
-/* ═══ AUTH LISTENER ═══ */
-function initAuthListener() {
-    if (!supabaseClient) { showLogin(); return; }
-
+function initAuthListener(){
+    if(!supabaseClient){ hideAuthScreen(); updateUserUI(null); return; }
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
         console.log("🔔 Auth event:", event);
-
-        if (session && session.user) {
-            if (session.user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-                console.warn("🚫 Non-admin:", session.user.email);
-                setAuthMessage("Access Denied — not admin", "error");
-                await supabaseClient.auth.signOut();
-                showLogin();
-                return;
+        if(session && session.user){
+            if(event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED"){
+                await handleSignedIn(session.user);
             }
-
-            currentUser = session.user;
-            console.log("👤 Admin:", session.user.email);
-            showAdmin(session.user);
         } else {
             currentUser = null;
-            showLogin();
-            setAuthMessage("", "");
+            cloudReady = false;
+            updateUserUI(null);
+            showAuthScreen();
+            setSyncStatus("synced","Logged out");
         }
     });
 }
 
-/* ═══ INIT ═══ */
-(function init() {
-    console.log("🚀 Admin panel starting…");
-    initAuthListener();
+window.addEventListener("online", () => {
+    console.log("🌐 Back online");
+    if(currentUser && cloudReady && pendingCloudSave){
+        pendingCloudSave = false;
+        saveCloudData(true);
+    } else if(currentUser && cloudReady){
+        setSyncStatus("synced","Synced");
+    }
+});
+
+window.addEventListener("offline", () => {
+    console.log("📴 Gone offline");
+    if(currentUser) setSyncStatus("offline","Offline");
+});
+
+document.addEventListener("input",function(e){
+    if(e.target.id === "addCash" || e.target.id === "addOnline") updateAddPaymentTotal();
+    if(e.target.classList.contains("category-percent-input")) updateAllocationTotalPreview();
+});
+
+(function initCloud(){
+    console.log("🚀 Initializing cloud sync...");
+    if(supabaseClient){
+        showAuthScreen();
+        initAuthListener();
+    } else {
+        hideAuthScreen();
+        updateUserUI(null);
+    }
 })();
+
 </script>
 
 </body>
