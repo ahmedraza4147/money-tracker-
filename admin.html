@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Money Tracker</title>
+
+<!-- SUPABASE CONFIG -->
+<script>
+    window.SUPABASE_URL = "https://efslvypklnvybfdpebhd.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmc2x2eXBrbG52eWJmZHBlYmhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzMTM1NTgsImV4cCI6MjEwNjg4OTU1OH0.mbSeCQcmLLVo7awT9VIbyR8dh1__fxAv2d4fZoIQTM4";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+    --bg:#0f172a;
+    --card:#1e293b;
+    --text:#f1f5f9;
+    --muted:#94a3b8;
+    --border:#334155;
+    --primary:#3b82f6;
+    --primary-soft:#1e3a8a;
+    --green:#4ade80;
+    --green-soft:#123321;
+    --red:#f87171;
+    --red-soft:#3b1818;
+    --orange:#fb923c;
+    --orange-soft:#3a2415;
+    --purple:#a78bfa;
+    --radius:14px;
+    --shadow:0 8px 28px rgba(0,0,0,0.3);
+}
+
+*{box-sizing:border-box;}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+}
+
+button, input, select, textarea{
+    font:inherit;
+    cursor:pointer;
+}
+
+/* ═══ LOGIN SCREEN ═══ */
+#loginScreen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+#loginScreen.hidden { display: none; }
+
+.login-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+}
+
+.login-box .logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #3b82f6, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin: 0 auto 20px;
+}
+
+.login-box h1 {
+    text-align: center;
+    margin: 0 0 8px;
+    font-size: 22px;
+    color: #f1f5f9;
+}
+
+.login-box p.subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    margin: 0 0 24px;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid #334155;
+    border-radius: 11px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    outline: none;
+    background: #0f172a;
+    color: #f1f5f9;
+}
+.login-box input:focus { border-color: #3b82f6; }
+
+.login-box button[type="submit"] {
+    width: 100%;
+    border: 0;
+    background: linear-gradient(135deg, #3b82f6, #7c3aed);
+    color: white;
+    padding: 14px;
+    border-radius: 11px;
+    font-weight: 700;
+    font-size: 15px;
+    margin-top: 8px;
+}
+
+.login-box button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-message {
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    display: none;
+}
+.auth-message.error { background: #3b1818; color: #f87171; display: block; }
+.auth-message.success { background: #123321; color: #4ade80; display: block; }
+
+/* ═══ ADMIN PANEL ═══ */
+#adminPanel {
+    display: none;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+#adminPanel.visible { display: block; }
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-header .title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-header .title h1 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.admin-header .title small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.logout-btn {
+    border: 0;
+    background: var(--red-soft);
+    color: var(--red);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+    .stats-grid { grid-template-columns: 1fr; }
+}
+
+.stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+
+.stat-card .label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-card .value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.stat-card.blue { border-left: 4px solid #3b82f6; }
+.stat-card.green { border-left: 4px solid #4ade80; }
+.stat-card.purple { border-left: 4px solid #a78bfa; }
+.stat-card.orange { border-left: 4px solid #fb923c; }
+
+/* Section Card */
+.section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section-card h2 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+th, td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    background: #0f172a;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td { background: rgba(59, 130, 246, 0.05); }
+
+.empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-style: italic;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--primary-soft);
+    color: #93c5fd;
+}
+
+.badge.mobile { background: #3a2415; color: #fb923c; }
+.badge.desktop { background: #1e3a8a; color: #93c5fd; }
+.badge.tablet { background: #281b45; color: #a78bfa; }
+
+/* Footer */
+.admin-footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 20px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+    <div class="login-box">
+        <div class="logo">🔧</div>
+        <h1>Admin Panel</h1>
+        <p class="subtitle">Money Tracker — Admin Access</p>
+
+        <div id="authMessage" class="auth-message"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <input type="email" id="loginEmail" placeholder="Admin email" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit" id="loginBtn">Log In</button>
+        </form>
+    </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+    <div class="admin-header">
+        <div class="title">
+            <div style="font-size:24px;">🔧</div>
+            <div>
+                <h1>Admin Dashboard</h1>
+                <small id="adminEmail">Loading…</small>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <div class="label">Total Users</div>
+            <div class="value" id="statUsers">—</div>
+        </div>
+        <div class="stat-card green">
+            <div class="label">Total Transactions</div>
+            <div class="value" id="statTransactions">—</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="label">Total Volume</div>
+            <div class="value" id="statVolume">—</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="label">Logins Today</div>
+            <div class="value" id="statToday">—</div>
+        </div>
+    </div>
+
+    <!-- LOGIN HISTORY -->
+    <div class="section-card">
+        <h2>📝 Login History (Last 20)</h2>
+        <div id="loginHistoryContainer">
+            <div class="loading">Loading login history…</div>
+        </div>
+    </div>
+
+    <!-- USERS SUMMARY -->
+    <div class="section-card">
+        <h2>👥 Users Summary</h2>
+        <div id="usersSummaryContainer">
+            <div class="loading">Loading users…</div>
+        </div>
+    </div>
+
+    <div class="admin-footer">
+        Money Tracker Admin Panel • Only accessible to admin email
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ADMIN PANEL — SUPABASE + LOGIC
+   ═══════════════════════════════════════════════ */
+
+const ADMIN_EMAIL = "2shaikhfarid211336@gmail.com";
+
+let supabaseClient = null;
+let currentUser = null;
+
+// Initialize Supabase
+try {
+    if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+        supabaseClient = window.supabase.createClient(
+            window.SUPABASE_URL,
+            window.SUPABASE_ANON_KEY,
+            {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: false
+                }
+            }
+        );
+        console.log("✅ Supabase initialized");
+    }
+} catch (err) {
+    console.error("❌ Supabase init failed:", err);
+}
+
+// ═══ UTILITIES ═══
+function $(id) { return document.getElementById(id); }
+
+function setAuthMessage(msg, type) {
+    const el = $("authMessage");
+    if (!el) return;
+    if (!msg) { el.className = "auth-message"; el.textContent = ""; return; }
+    el.className = "auth-message " + type;
+    el.textContent = msg;
+}
+
+function formatMoney(n) {
+    return "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+}
+
+function formatDate(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+    });
+}
+
+function escapeHtml(s) {
+    return String(s ?? "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// ═══ LOGIN ═══
+async function handleLogin(e) {
+    e.preventDefault();
+    if (!supabaseClient) { setAuthMessage("Cloud not configured", "error"); return; }
+
+    const email = $("loginEmail").value.trim();
+    const password = $("loginPassword").value;
+    const btn = $("loginBtn");
+
+    if (!email || !password) { setAuthMessage("Enter email and password", "error"); return; }
+
+    // Client-side admin check (fast feedback)
+    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        setAuthMessage("Access Denied — not admin", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Logging in…";
+    setAuthMessage("", "");
+
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        console.log("✅ Admin login:", data.user.email);
+        setAuthMessage("Login successful!", "success");
+        // onAuthStateChange will handle the rest
+    } catch (err) {
+        console.error("Login failed:", err);
+        setAuthMessage(err.message || "Login failed", "error");
+        btn.disabled = false;
+        btn.textContent = "Log In";
+    }
+}
+
+// ═══ LOGOUT ═══
+async function handleLogout() {
+    if (!supabaseClient) return;
+    try {
+        await supabaseClient.auth.signOut();
+        location.reload();
+    } catch (err) {
+        console.error("Logout failed:", err);
+    }
+}
+
+// ═══ LOAD ADMIN DATA ═══
+async function loadAdminData() {
+    if (!supabaseClient || !currentUser) return;
+
+    // 1. Fetch all login history
+    try {
+        const { data: logins, error } = await supabaseClient
+            .from("login_history")
+            .select("*")
+            .order("login_time", { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+        renderLoginHistory(logins || []);
+    } catch (err) {
+        console.error("Login history fetch failed:", err);
+        $("loginHistoryContainer").innerHTML = `<div class="empty">Failed to load: ${escapeHtml(err.message)}</div>`;
+    }
+
+    // 2. Fetch all tracker data
+    try {
+        const { data: trackers, error } = await supabaseClient
+            .from("money_tracker_data")
+            .select("user_id, data, updated_at");
+
+        if (error) throw error;
+        processTrackerData(trackers || []);
+    } catch (err) {
+        console.error("Tracker data fetch failed:", err);
+        $("usersSummaryContainer").innerHTML = `<div class="empty">Failed to load: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+// ═══ PROCESS DATA ═══
+function processTrackerData(trackers) {
+    const totalUsers = trackers.length;
+    let totalTransactions = 0;
+    let totalVolume = 0;
+
+    const users = trackers.map(t => {
+        const txns = (t.data && t.data.transactions) || [];
+        const txnCount = txns.length;
+
+        // Calculate volume = sum of ADD amounts
+        const addVolume = txns
+            .filter(tx => tx.type === "ADD")
+            .reduce((s, tx) => s + Number(tx.amount || 0), 0);
+
+        totalTransactions += txnCount;
+        totalVolume += addVolume;
+
+        return {
+            user_id: t.user_id,
+            txnCount: txnCount,
+            volume: addVolume,
+            updated_at: t.updated_at
+        };
+    });
+
+    // Update stats
+    $("statUsers").textContent = totalUsers;
+    $("statTransactions").textContent = totalTransactions;
+    $("statVolume").textContent = formatMoney(totalVolume);
+
+    // Render users summary
+    renderUsersSummary(users);
+}
+
+// ═══ LOGIN HISTORY TABLE ═══
+function renderLoginHistory(logins) {
+    const container = $("loginHistoryContainer");
+
+    if (logins.length === 0) {
+        container.innerHTML = `<div class="empty">No login history yet.</div>`;
+        return;
+    }
+
+    // Count today
+    const today = new Date().toISOString().slice(0, 10);
+    const todayCount = logins.filter(l => l.login_time && l.login_time.slice(0, 10) === today).length;
+    $("statToday").textContent = todayCount;
+
+    const rows = logins.map(l => {
+        const dtClass = (l.device_type || "").toLowerCase();
+        return `
+            <tr>
+                <td>${escapeHtml(formatDate(l.login_time))}</td>
+                <td>${escapeHtml(l.email || "—")}</td>
+                <td><span class="badge ${dtClass}">${escapeHtml(l.device_type || "—")}</span></td>
+                <td>${escapeHtml(l.browser || "—")}</td>
+                <td>${escapeHtml(l.os || "—")}</td>
+            </tr>
+        `;
+    }).join("");
+
+    container.innerHTML = `
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Login Time</th>
+                        <th>Email</th>
+                        <th>Device</th>
+                        <th>Browser</th>
+                        <th>OS</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+// ═══ USERS SUMMARY ═══
+function renderUsersSummary(users) {
+    const container = $("usersSummaryContainer");
+
+    if (users.length === 0) {
+        container.innerHTML = `<div class="empty">No users yet.</div>`;
+        return;
+    }
+
+    const rows = users.map(u => `
+        <tr>
+            <td>${escapeHtml(u.user_id)}</td>
+            <td>${u.txnCount}</td>
+            <td>${formatMoney(u.volume)}</td>
+            <td>${escapeHtml(formatDate(u.updated_at))}</td>
+        </tr>
+    `).join("");
+
+    container.innerHTML = `
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Transactions</th>
+                        <th>Volume Added</th>
+                        <th>Last Update</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+// ═══ SHOW/HIDE PANELS ═══
+function showLogin() {
+    $("loginScreen").classList.remove("hidden");
+    $("adminPanel").classList.remove("visible");
+}
+
+function showAdmin(user) {
+    $("loginScreen").classList.add("hidden");
+    $("adminPanel").classList.add("visible");
+    $("adminEmail").textContent = user.email;
+    loadAdminData();
+}
+
+// ═══ AUTH STATE LISTENER ═══
+function initAuthListener() {
+    if (!supabaseClient) {
+        showLogin();
+        return;
+    }
+
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        console.log("🔔 Auth event:", event);
+
+        if (session && session.user) {
+            // Double-check email (server-side validation through RLS would also apply)
+            if (session.user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+                console.warn("🚫 Non-admin login attempt:", session.user.email);
+                setAuthMessage("Access Denied — not admin", "error");
+                await supabaseClient.auth.signOut();
+                showLogin();
+                return;
+            }
+
+            currentUser = session.user;
+            console.log("👤 Admin signed in:", session.user.email);
+            showAdmin(session.user);
+
+        } else {
+            currentUser = null;
+            showLogin();
+            setAuthMessage("", "");
+        }
+    });
+}
+
+// ═══ INITIALIZE ═══
+(function init() {
+    console.log("🚀 Admin panel starting…");
+    initAuthListener();
+})();
+</script>
+
+</body>
+</html>
